@@ -18,7 +18,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    name: Build for ${{ matrix.platform }}
+    name: Compiler Test
     strategy:
       fail-fast: false
       matrix:
