@@ -39,13 +39,12 @@ public class Auth : ControllerBase
     }
 
     session.LinkedRover = login.AuthenthicationKey;
-    
-    
 
-    Dictionary<string, string> data = new Dictionary<string, string>();
-    data.Add("token", session.SessionId);
+    Dictionary<string, string> data = new()
+    {
+      { "token", session.SessionId }
+    };
     return Ok(data);
 
   }
 }
-

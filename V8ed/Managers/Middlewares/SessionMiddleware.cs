@@ -4,7 +4,7 @@ namespace V8ed.Managers.Middlewares;
 
 public class SessionMiddleware
 {
-  
+
   private readonly RequestDelegate _next;
   private readonly SessionManager _manager;
 

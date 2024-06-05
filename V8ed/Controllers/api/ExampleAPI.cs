@@ -14,14 +14,14 @@ public class ExampleApi : ControllerBase
   public async Task<IActionResult> testGet()
   {
     await Task.Delay(new TimeSpan(1)); //using Async
-    var truc = new Dictionary<string, string>()
+    Dictionary<string, string> truc = new Dictionary<string, string>()
     {
       ["Ouah"] = "Une réponse !",
     };
-    
+
     return Ok(JsonConvert.SerializeObject(truc));
   }
-  
+
   [HttpGet]
   [Route("attribute")]
   public IActionResult testAttribute(string parameter1)

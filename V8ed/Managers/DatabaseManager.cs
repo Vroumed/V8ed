@@ -43,7 +43,7 @@ public class DatabaseManager
   {
     return await FetchOne<object>(query, parameters);
   }
-  
+
   public async Task<List<Dictionary<string, object>>> FetchAll(string query, IDictionary<string, object>? parameters = null)
   {
     return await FetchAll<object>(query, parameters);
@@ -72,7 +72,6 @@ public class DatabaseManager
 
     for (int i = 0; i < Reader.FieldCount; i++)
       result[Reader.GetName(i)] = (T) Reader.GetValue(i);
-    
 
     await Reader.CloseAsync();
     await Connection.CloseAsync();
@@ -101,7 +100,7 @@ public class DatabaseManager
     if (!t)
       return null;
     Dictionary<string, T> result = new();
-    for (int i = 0; i < Reader!.FieldCount; i++) 
+    for (int i = 0; i < Reader!.FieldCount; i++)
       result[Reader.GetName(i)] = (T) Reader.GetValue(i);
 
     return result;
@@ -138,7 +137,7 @@ public class DatabaseManager
   public async Task Execute(string query, IDictionary<string, object>? parameters = null)
   {
     await Connection.OpenAsync();
-    MySqlCommand command = new MySqlCommand(query, Connection, Transaction);
+    MySqlCommand command = new(query, Connection, Transaction);
     if (parameters != null)
       command.Parameters.AddRange(parameters.ToArray());
     await command.ExecuteNonQueryAsync();
@@ -149,7 +148,7 @@ public class DatabaseManager
   {
     AssertReaderOpenned();
     await Connection.OpenAsync();
-    MySqlCommand command = new MySqlCommand(query, Connection, Transaction);
+    MySqlCommand command = new(query, Connection, Transaction);
     if (parameters != null)
       foreach (KeyValuePair<string, object> parameter in parameters)
         command.Parameters.AddWithValue(parameter.Key, parameter.Value);
@@ -185,19 +184,23 @@ public class DatabaseManager
   #region Security Checks
   private void AssertReaderOpenned()
   {
-    if (Connection.State != System.Data.ConnectionState.Closed) throw new InvalidOperationException($"To start a new query, connection must be closed, current state is is {Connection.State}");
+    if (Connection.State != System.Data.ConnectionState.Closed)
+      throw new InvalidOperationException($"To start a new query, connection must be closed, current state is is {Connection.State}");
   }
   private void EnsureReaderOpenned()
   {
-    if (Reader == null || Reader.IsClosed) throw new InvalidOperationException($"Tried to use a closed Reader");
+    if (Reader == null || Reader.IsClosed)
+      throw new InvalidOperationException($"Tried to use a closed Reader");
   }
   private void EnsureTransactionOpenned()
   {
-    if (Transaction == null) throw new InvalidOperationException($"Tried to close an unexisting Transaction");
+    if (Transaction == null)
+      throw new InvalidOperationException($"Tried to close an unexisting Transaction");
   }
   private void AssertTransactionOpenned()
   {
-    if (Transaction != null) throw new InvalidOperationException($"Tried to open an already openned Transaction");
+    if (Transaction != null)
+      throw new InvalidOperationException($"Tried to open an already openned Transaction");
   }
   #endregion
 }
