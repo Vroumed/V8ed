@@ -1,7 +1,7 @@
 ﻿using MySqlConnector;
-using V8ed.Models.Configuration;
+using Vroumed.V8ed.Models.Configuration;
 
-namespace V8ed.Managers;
+namespace Vroumed.V8ed.Managers;
 
 public class DatabaseManager
 {

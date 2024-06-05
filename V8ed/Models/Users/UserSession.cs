@@ -1,7 +1,6 @@
 ﻿using System.Net;
-using System.Net.WebSockets;
 
-namespace V8ed.Models.Users;
+namespace Vroumed.V8ed.Models.Users;
 
 public class UserSession
 {

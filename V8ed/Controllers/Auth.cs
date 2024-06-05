@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
-using V8ed.Extensions;
-using V8ed.Managers;
-using V8ed.Models.Users;
+using Vroumed.V8ed.Extensions;
+using Vroumed.V8ed.Models.Users;
 
-namespace V8ed.Controllers;
+namespace Vroumed.V8ed.Controllers;
 
 [ApiController]
 [Route("auth")]

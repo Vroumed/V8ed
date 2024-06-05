@@ -1,6 +1,6 @@
-﻿using V8ed.Models.Users;
+﻿using Vroumed.V8ed.Models.Users;
 
-namespace V8ed.Managers.Middlewares;
+namespace Vroumed.V8ed.Managers.Middlewares;
 
 public class SessionMiddleware
 {
