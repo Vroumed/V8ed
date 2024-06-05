@@ -27,16 +27,12 @@ public class Auth : ControllerBase
 
     UserSession session = UserSession.FromContext(_context);
     if (session.Logged)
-    {
       return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "auth", "You are already logged in"));
-    }
 
     //TODO Check if rover exists
     bool roverFound = true; //ignore for now
     if (!roverFound)
-    {
       return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "auth", "Invalid login or password"));
-    }
 
     session.LinkedRover = login.AuthenthicationKey;
 

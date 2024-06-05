@@ -11,7 +11,7 @@ public class ExampleApi : ControllerBase
 {
   [HttpGet]
   [Route("get")]
-  public async Task<IActionResult> testGet()
+  public async Task<IActionResult> TestGet()
   {
     await Task.Delay(new TimeSpan(1)); //using Async
     Dictionary<string, string> truc = new Dictionary<string, string>()
@@ -24,7 +24,7 @@ public class ExampleApi : ControllerBase
 
   [HttpGet]
   [Route("attribute")]
-  public IActionResult testAttribute(string parameter1)
+  public IActionResult TestAttribute(string parameter1)
   {
     if (parameter1.ToLower().Trim() != "test")
       return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, nameof(parameter1), $"{nameof(parameter1)} should be \"test\""));
