@@ -34,7 +34,7 @@ jobs:
 
     - name: dotnet format (only verify, no changes)
       id: dotnet-format
-      run: dotnet format --verbosity diagnostic --verify-no-changes V8ed.sln
+      run: dotnet format --verbosity diagnostic --verify-no-changes V8ed/V8ed.csproj
 
     - name: Create Linter Comments
       if: steps.dotnet-format.outcome == 'failure'
