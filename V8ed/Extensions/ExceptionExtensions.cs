@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
-namespace V8ed.Extensions;
+namespace Vroumed.V8ed.Extensions;
 
 public static class ExceptionExtensions
 {

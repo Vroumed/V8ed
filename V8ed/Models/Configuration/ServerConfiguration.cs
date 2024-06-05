@@ -1,4 +1,4 @@
-﻿namespace V8ed.Models.Configuration;
+﻿namespace Vroumed.V8ed.Models.Configuration;
 
 public class ServerConfiguration
 {

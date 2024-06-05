@@ -1,7 +1,8 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Vroumed.Common.Packets;
 
-namespace V8ed.Utils;
+namespace Vroumed.V8ed.Utils;
 
 public static class StringUtils
 {

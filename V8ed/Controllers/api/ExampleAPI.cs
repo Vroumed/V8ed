@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Net;
-using V8ed.Extensions;
+using Vroumed.V8ed.Extensions;
 
-namespace V8ed.Controllers.api;
+namespace Vroumed.V8ed.Controllers.api;
 
 [Route("api/example")]
 [ApiController]

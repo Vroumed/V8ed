@@ -1,7 +1,7 @@
-﻿using V8ed.Models.Users;
-using V8ed.Utils;
+﻿using Vroumed.V8ed.Models.Users;
+using Vroumed.V8ed.Utils;
 
-namespace V8ed.Managers;
+namespace Vroumed.V8ed.Managers;
 
 public class SessionManager
 {
