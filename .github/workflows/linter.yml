@@ -22,7 +22,7 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: dotnet format (apply fixes)
-      run: dotnet format --verbosity diagnostic V8ed.sln
+      run: dotnet format --verbosity diagnostic V8ed/V8ed.csproj
 
     - name: Commit dotnet format Fixes
       run: |
