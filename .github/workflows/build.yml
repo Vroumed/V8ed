@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      build-type:
+        description: Build type
+        required: true
+        type: choice
+        options:
+        - release
+        - debug
+
+env:
+  BUILD_TYPE: ${{ inputs.build-type || 'publish' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    name: Compiler Test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "linux-x64"
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        
+    - name: Restore docker /cache
+      uses: actions/cache@v3
+      with:
+        path: cache
+        key: cache-${{ matrix.platform }}-${{ env.BUILD_TYPE }}-${{ github.run_id }}
+        restore-keys: cache-${{ matrix.platform }}-${{ env.BUILD_TYPE }}
+    
+    - name: Inject /cache into docker
+      uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+      with:
+        cache-source: cache
+        cache-target: /cache
+
+
+    - name: Build using docker
+      run: |
+        docker buildx build . -f Deployment/Dockerfile --progress=plain --output output --build-arg "PLATFORM=${{ matrix.platform }}" --build-arg "BUILD_TYPE=$BUILD_TYPE"
