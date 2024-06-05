@@ -22,7 +22,7 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: dotnet format (apply fixes)
-      run: dotnet format --verbosity diagnostic DeltaDash.sln
+      run: dotnet format --verbosity diagnostic V8ed.sln
 
     - name: Commit dotnet format Fixes
       run: |
@@ -34,7 +34,7 @@ jobs:
 
     - name: dotnet format (only verify, no changes)
       id: dotnet-format
-      run: dotnet format --verbosity diagnostic --verify-no-changes DeltaDash.sln
+      run: dotnet format --verbosity diagnostic --verify-no-changes V8ed.sln
 
     - name: Create Linter Comments
       if: steps.dotnet-format.outcome == 'failure'
