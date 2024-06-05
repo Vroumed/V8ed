@@ -14,7 +14,7 @@ public class ExampleApi : ControllerBase
   public async Task<IActionResult> TestGet()
   {
     await Task.Delay(new TimeSpan(1)); //using Async
-    Dictionary<string, string> truc = new Dictionary<string, string>()
+    Dictionary<string, string> truc = new()
     {
       ["Ouah"] = "Une réponse !",
     };

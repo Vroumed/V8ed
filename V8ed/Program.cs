@@ -20,7 +20,7 @@ internal class Program
       app.UseSwaggerUI();
     }
 
-    WebSocketOptions webSocketOptions = new WebSocketOptions
+    WebSocketOptions webSocketOptions = new()
     {
       KeepAliveInterval = TimeSpan.FromMinutes(2)
     };
