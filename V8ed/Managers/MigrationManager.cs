@@ -19,23 +19,24 @@ public class MigrationManager : IDependencyCandidate
   private List<string> ConstraintsInstructions { get; } = new();
 
   public static Dictionary<Type, string> GetSqlTypeMappings => new()
-    {
-        { typeof(byte), "TINYINT" },
-        { typeof(short), "SMALLINT" },
-        { typeof(int), "INT" },
-        { typeof(long), "BIGINT" },
-        { typeof(float), "REAL" },
-        { typeof(double), "FLOAT" },
-        { typeof(decimal), "DECIMAL" },
-        { typeof(bool), "BIT" },
-        { typeof(char), "CHAR(1)" },
-        { typeof(string), "NVARCHAR(MAX)" },
-        { typeof(DateTime), "DATETIME" },
-        { typeof(DateTimeOffset), "DATETIMEOFFSET" },
-        { typeof(TimeSpan), "TIME" },
-        { typeof(Guid), "UNIQUEIDENTIFIER" },
-        { typeof(byte[]), "VARBINARY(MAX)" }
-    };
+  {
+    { typeof(byte), "TINYINT" },
+    { typeof(short), "SMALLINT" },
+    { typeof(int), "INT" },
+    { typeof(long), "BIGINT" },
+    { typeof(float), "FLOAT" },
+    { typeof(double), "DOUBLE" }, 
+    { typeof(decimal), "DECIMAL(18, 2)" }, 
+    { typeof(bool), "TINYINT(1)" }, 
+    { typeof(char), "CHAR(1)" },
+    { typeof(string), "VARCHAR(255)" }, 
+    { typeof(DateTime), "DATETIME" },
+    { typeof(DateTimeOffset), "DATETIME" }, 
+    { typeof(TimeSpan), "TIME" },
+    { typeof(Guid), "CHAR(36)" }, 
+    { typeof(byte[]), "BLOB" }
+  };
+
 
   [ResolvedLoader]
   private void Load()
@@ -45,7 +46,9 @@ public class MigrationManager : IDependencyCandidate
     foreach (Type type in assemblyTypes)
     {
       CreateInstructions.Add(GenerateCreateInstructionsFor(type));
-      ConstraintsInstructions.Add(GenerateConstraintsInstructionsFor(type));
+      string alterInstruction = GenerateConstraintsInstructionsFor(type);
+      if (!string.IsNullOrWhiteSpace(alterInstruction)) 
+        ConstraintsInstructions.Add(alterInstruction);
     }
 
     Task.Run(async () =>
@@ -62,7 +65,6 @@ public class MigrationManager : IDependencyCandidate
         Console.WriteLine(instruction);
         await DatabaseManager.Execute(instruction);
       }
-      
     }).GetAwaiter().GetResult();
   }
 
@@ -79,9 +81,12 @@ public class MigrationManager : IDependencyCandidate
     StringBuilder sb = new();
     sb.AppendLine($"CREATE TABLE {tableName} (");
 
+    List<string> strings = new();
+
     foreach (PropertyInfo property in properties)
       if (property.GetCustomAttributes().FirstOrDefault(c => c is CrudColumn) is CrudColumn column)
       {
+        string line = string.Empty;
         string sqlType;
         columns.Add(column);
         if (property.PropertyType.IsAssignableTo(typeof(Crud)))
@@ -93,17 +98,20 @@ public class MigrationManager : IDependencyCandidate
             ? typeMapping
             : throw new InvalidOperationException($"No SQL type mapping found for {property.PropertyType}");
 
-        sb.Append($"  {column.Name} {sqlType}");
+        line += $"  {column.Name} {sqlType}";
         if (column.PrimaryKey)
-          sb.Append(" PRIMARY KEY");
+          line += " PRIMARY KEY";
         if (column.IsAutoIncrement)
-          sb.Append(" IDENTITY(1,1)");
+          line += " AUTO_INCREMENT";
         if (!column.CanBeNull)
-          sb.Append(" NOT NULL");
+          line += " NOT NULL";
         if (column.Default != null)
-          sb.Append($" DEFAULT {column.Default}");
-        sb.AppendLine(",");
+          line += $" DEFAULT {column.Default}";
+
+        strings.Add(line);
       }
+
+    sb.AppendLine(string.Join(", \n", strings));
 
     sb.Length--; // Remove the last comma
     sb.AppendLine(");");
@@ -126,7 +134,7 @@ public class MigrationManager : IDependencyCandidate
 
     StringBuilder sb = new();
     foreach ((PropertyInfo prop, CrudColumn column) in columns)
-      if (typeof(Crud).IsAssignableTo(prop.PropertyType))
+      if (prop.PropertyType.IsAssignableTo(typeof(Crud)))
       {
         Type foreignType = prop.PropertyType;
         CrudTable foreignTable = foreignType.GetCustomAttributes().FirstOrDefault(a => a is CrudTable) as CrudTable
