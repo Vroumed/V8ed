@@ -6,13 +6,17 @@ public class CrudColumn : Attribute
   public string Name { get; }
   public bool PrimaryKey { get; }
   public bool IsAutoIncrement { get; }
-  public string ForeignKey { get; }
+  public bool CanBeNull { get; }
+  public object? Default { get; }
 
-  public CrudColumn(string name, bool primaryKey = false,bool isAutoIncrement = false, string foreignKey = null) 
+  public CrudColumn(string name, bool primaryKey = false,bool isAutoIncrement = false, bool canBeNull = true, object @default = null) 
   {
     Name = name;
     PrimaryKey = primaryKey;
+    if (primaryKey)
+      canBeNull = false;
     IsAutoIncrement = isAutoIncrement;
-    ForeignKey = foreignKey;
+    CanBeNull = canBeNull;
+    Default = @default;
   }
 }

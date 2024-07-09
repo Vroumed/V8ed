@@ -2,15 +2,12 @@
 
 namespace Vroumed.V8ed.Models;
 
-[CrudTable("EventConnexion")]
-public class EventConnexion
+[CrudTable("connections")]
+public class Connection
 {
   [CrudColumn("id", primaryKey: true, isAutoIncrement: true)]
   public int Id { get; set; }
 
-  [CrudColumn("try")]
-  public bool Try { get; set; }
-
-  [CrudColumn("satue")]
-  public bool Satue { get; set; }
+  [CrudColumn("try_count", canBeNull:false, @default:0)]
+  public int TryCount { get; set; }
 }

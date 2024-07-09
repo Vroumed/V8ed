@@ -2,12 +2,12 @@
 
 namespace Vroumed.V8ed.Models;
 
-[CrudTable("Cars")]
-public class Cars
+[CrudTable("cars")]
+public class Car
 {
-  [CrudColumn("apiKey", primaryKey: true)]
+  [CrudColumn("api_key", primaryKey: true)]
   public string ApiKey { get; set; }
 
-  [CrudColumn("carName")]
+  [CrudColumn("car_name")]
   public string CarName { get; set; }
 }

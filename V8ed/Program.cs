@@ -15,6 +15,7 @@ internal class Program
     ServerConfiguration conf = builder.Configuration.GetSection(ServerConfiguration.SECTION_NAME).Get<ServerConfiguration>()!;
     DatabaseManager DBmanager = new(conf);
     dependencyInjector.Cache(DBmanager);
+    dependencyInjector.Cache(dependencyInjector);
 
     int count = Task.Run(async () => await DBmanager.FetchOne<int>("SELECT COUNT(*) count FROM information_schema.tables WHERE table_schema = @schema;", new Dictionary<string, object>()
     {
