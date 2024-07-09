@@ -12,7 +12,7 @@ namespace Vroumed.V8ed.Managers;
 public class MigrationManager : IDependencyCandidate
 {
   [Resolved]
-  private DatabaseManager DatabaseManager { get; }
+  private DatabaseManager DatabaseManager { get; set; }
 
   private List<string> CreateInstructions { get; } = new();
 
@@ -41,7 +41,7 @@ public class MigrationManager : IDependencyCandidate
   private void Load()
   {
     Assembly assembly = Assembly.GetExecutingAssembly();
-    Type[] assemblyTypes = assembly.GetTypes().Where(t => !t.IsAbstract && typeof(Crud).IsAssignableFrom(t)).ToArray();
+    Type[] assemblyTypes = assembly.GetTypes().Where(t => !t.IsAbstract && t.IsAssignableTo(typeof(Crud))).ToArray();
     foreach (Type type in assemblyTypes)
     {
       CreateInstructions.Add(GenerateCreateInstructionsFor(type));
@@ -50,22 +50,19 @@ public class MigrationManager : IDependencyCandidate
 
     Task.Run(async () =>
     {
-      await DatabaseManager.OpenTransaction();
-      try
-      {
-        foreach (string instruction in CreateInstructions) 
-          await DatabaseManager.Execute(instruction);
 
-        foreach (string instruction in ConstraintsInstructions) 
-          await DatabaseManager.Execute(instruction);
-
-        await DatabaseManager.CommitTransaction();
-      }
-      catch (Exception)
+      foreach (string instruction in CreateInstructions)
       {
-        await DatabaseManager.RollbackTransaction();
-        throw;
+        Console.WriteLine(instruction);
+        await DatabaseManager.Execute(instruction);
       }
+
+      foreach (string instruction in ConstraintsInstructions)
+      {
+        Console.WriteLine(instruction);
+        await DatabaseManager.Execute(instruction);
+      }
+      
     }).GetAwaiter().GetResult();
   }
 
@@ -87,7 +84,7 @@ public class MigrationManager : IDependencyCandidate
       {
         string sqlType;
         columns.Add(column);
-        if (property.PropertyType.IsAssignableFrom(typeof(Crud)))
+        if (property.PropertyType.IsAssignableTo(typeof(Crud)))
           sqlType = GetSqlTypeMappings.TryGetValue(property.PropertyType.GetPrimaryKey().PropertyType, out string? typeMapping)
             ? typeMapping
             : throw new InvalidOperationException($"No SQL type mapping found for {property.PropertyType}");
@@ -129,7 +126,7 @@ public class MigrationManager : IDependencyCandidate
 
     StringBuilder sb = new();
     foreach ((PropertyInfo prop, CrudColumn column) in columns)
-      if (typeof(Crud).IsAssignableFrom(prop.PropertyType))
+      if (typeof(Crud).IsAssignableTo(prop.PropertyType))
       {
         Type foreignType = prop.PropertyType;
         CrudTable foreignTable = foreignType.GetCustomAttributes().FirstOrDefault(a => a is CrudTable) as CrudTable

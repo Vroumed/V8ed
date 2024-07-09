@@ -1,9 +1,10 @@
-﻿using Vroumed.V8ed.Controllers.Attributes;
+﻿using Vroumed.V8ed.Controllers;
+using Vroumed.V8ed.Controllers.Attributes;
 
 namespace Vroumed.V8ed.Models;
 
 [CrudTable("connections")]
-public class Connection
+public class Connection : Crud
 {
   [CrudColumn("id", primaryKey: true, isAutoIncrement: true)]
   public int Id { get; set; }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Vroumed.V8ed.Extensions;
+using System.Collections;
 
 namespace Vroumed.V8ed.Controllers;
 
@@ -26,7 +27,6 @@ public abstract class Crud : IDependencyCandidate
 
     List<(PropertyInfo, CrudColumn)> columns = new();
     foreach (PropertyInfo property in properties)
-    {
       if (property.GetCustomAttributes().FirstOrDefault(c => c is CrudColumn) is CrudColumn column)
       {
         columns.Add((property, column));
@@ -36,7 +36,6 @@ public abstract class Crud : IDependencyCandidate
           initBy = (property, column);
         }
       }
-    }
 
     if (!doInit)
       return;
@@ -57,7 +56,7 @@ public abstract class Crud : IDependencyCandidate
       if (data == null)
         return;
       foreach ((PropertyInfo prop, CrudColumn col) in columns)
-        if (prop.PropertyType.IsAssignableFrom(typeof(Crud)))
+        if (prop.PropertyType.IsAssignableTo(typeof(Crud)))
         {
           Type type = prop.PropertyType;
 
@@ -81,29 +80,84 @@ public abstract class Crud : IDependencyCandidate
   private async Task Insert()
   {
     CrudTable table = GetType().GetCustomAttributes().FirstOrDefault(a => a is CrudTable) as CrudTable
-        ?? throw new InvalidOperationException($"Type {GetType().Name} does not have the required attribute {nameof(CrudTable)}");
+                      ?? throw new InvalidOperationException($"Type {GetType().Name} does not have the required attribute {nameof(CrudTable)}");
 
     string tableName = table.Name;
     List<(PropertyInfo prop, CrudColumn column)> columns = GetColumns();
+    (PropertyInfo prop, CrudColumn column) autoIncrementColumn = columns.FirstOrDefault(c => c.column.IsAutoIncrement);
 
-    string columnNames = string.Join(", ", columns.Select(c => c.column.Name));
-    string paramNames = string.Join(", ", columns.Select(c => "@" + c.column.Name));
+    if (autoIncrementColumn.prop != null && autoIncrementColumn.prop.GetValue(this) != null)
+      throw new InvalidOperationException($"Column {autoIncrementColumn.column.Name} is auto-increment and its value must be null before insert.");
+
+    string columnNames = string.Join(", ", columns.Where(c => !c.column.IsAutoIncrement).Select(c => c.column.Name));
+    string paramNames = string.Join(", ", columns.Where(c => !c.column.IsAutoIncrement).Select(c => "@" + c.column.Name));
 
     string query = $"INSERT INTO {tableName} ({columnNames}) VALUES ({paramNames})";
 
-    Dictionary<string, object?> parameters = columns.ToDictionary(c => c.column.Name, c =>
+    Dictionary<string, object?> parameters = columns.Where(c => !c.column.IsAutoIncrement).ToDictionary(c => c.column.Name, c =>
     {
-      if (!c.prop.PropertyType.IsAssignableFrom(typeof(Crud))) 
+      if (!c.prop.PropertyType.IsAssignableTo(typeof(Crud)))
         return c.prop.GetValue(this)!;
 
       if (c.prop.GetValue(this) is not Crud obj)
         return null;
 
-      obj.Insert();
+      obj.Insert().Wait();
       return c.prop.PropertyType.GetPrimaryKey().GetValue(obj);
     });
 
     await DatabaseManager.Execute(query, parameters);
+
+    // Retrieve the auto-incremented ID
+    if (autoIncrementColumn.prop != null)
+    {
+      string lastInsertIdQuery = "SELECT LAST_INSERT_ID()";
+      Dictionary<string, object>? lastInsertId = await DatabaseManager.FetchOne(lastInsertIdQuery, null);
+      autoIncrementColumn.prop.SetValue(this, Convert.ChangeType(lastInsertId.Values.First(), autoIncrementColumn.prop.PropertyType));
+    }
+
+    await SaveEnumerables();
+  }
+
+  private async Task SaveEnumerables(bool deleteOnly = true) 
+  {
+    CrudTable table = GetType().GetCustomAttributes().FirstOrDefault(a => a is CrudTable) as CrudTable
+                      ?? throw new InvalidOperationException($"Type {GetType().Name} does not have the required attribute {nameof(CrudTable)}");
+
+    string tableName = table.Name;
+
+    PropertyInfo[] properties = GetType()
+      .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+      .Where(s => s
+        .GetCustomAttributes<CrudEnumerableWhere>().Any() && s.PropertyType.GetInterfaces().Contains(typeof(IEnumerable))).ToArray();
+
+    foreach (PropertyInfo property in properties)
+    {
+      IEnumerable<CrudEnumerableWhere> ens = property.GetCustomAttributes<CrudEnumerableWhere>();
+
+      string delete = $"DELETE FROM {tableName} WHERE ";
+
+      delete += string.Join(" AND ",
+        ens.Select(e => $"{e.ColumnExtern} {e.ComparisonType.ToSqlOperator()} @{e.ColumnLocal}"));
+
+      Dictionary<string, object?> parameters = 
+        ens.ToDictionary(crudEnumerableWhere => 
+          crudEnumerableWhere.ColumnLocal, 
+          crudEnumerableWhere => GetColumns()
+            .FirstOrDefault(s => s.column.Name == crudEnumerableWhere.ColumnLocal)
+            .prop.GetValue(this));
+
+      DatabaseManager.Execute(delete, parameters);
+
+      if (deleteOnly) 
+        continue;
+
+      if (property.GetValue(this) is not IEnumerable enumerable)
+        continue;
+      foreach (object o in enumerable)
+        if (o is Crud crudItem)
+          await crudItem.Insert();
+    }
   }
 
   private async Task Update()
@@ -126,7 +180,7 @@ public abstract class Crud : IDependencyCandidate
 
     Dictionary<string, object?> parameters = columns.ToDictionary(c => c.column.Name, c =>
     {
-      if (!c.prop.PropertyType.IsAssignableFrom(typeof(Crud))) 
+      if (!c.prop.PropertyType.IsAssignableTo(typeof(Crud))) 
         return c.prop.GetValue(this)!;
 
       if (c.prop.GetValue(this) is not Crud obj)
@@ -138,6 +192,8 @@ public abstract class Crud : IDependencyCandidate
     });
 
     await DatabaseManager.Execute(query, parameters);
+
+    await SaveEnumerables();
   }
 
   private async Task Delete()
@@ -162,6 +218,8 @@ public abstract class Crud : IDependencyCandidate
     };
 
     await DatabaseManager.Execute(query, parameters);
+
+    await SaveEnumerables(true);
   }
 
   private List<(PropertyInfo prop, CrudColumn column)> GetColumns()

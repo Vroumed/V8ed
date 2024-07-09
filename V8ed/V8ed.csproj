@@ -15,11 +15,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Common\Common.csproj" />
-      <ProjectReference Include="..\Common\Common.nfproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Folder Include="Dependencies\" />
     </ItemGroup>
 

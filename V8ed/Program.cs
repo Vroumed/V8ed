@@ -17,7 +17,7 @@ internal class Program
     dependencyInjector.Cache(DBmanager);
     dependencyInjector.Cache(dependencyInjector);
 
-    int count = Task.Run(async () => await DBmanager.FetchOne<int>("SELECT COUNT(*) count FROM information_schema.tables WHERE table_schema = @schema;", new Dictionary<string, object>()
+    long count = Task.Run(async () => await DBmanager.FetchOne<long>("SELECT COUNT(*) count FROM information_schema.tables WHERE table_schema = @schema;", new Dictionary<string, object>()
     {
       ["schema"] = conf.Database,
     })).Result!["count"];

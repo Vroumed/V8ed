@@ -81,30 +81,22 @@ public sealed class DependencyInjector
   public void Resolve(IDependencyCandidate candidate)
   {
     //Get all the properties with the Resolved attribute
-    FieldInfo[] properties = candidate.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-    foreach (FieldInfo property in properties)
-    {
+    PropertyInfo[] properties = candidate.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+    foreach (PropertyInfo property in properties)
       if (property.GetCustomAttributes(false).Any(s => s is Resolved))
-      {
-        property.SetValue(candidate, Retrieve(property.FieldType));
-      }
-    }
+        property.SetValue(candidate, Retrieve(property.PropertyType));
 
     MethodInfo[] methods = candidate.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
     foreach (MethodInfo method in methods)
-    {
-      if (method.GetCustomAttributes(false).Any(s => s is ResolvedLoader))
+      if (method.GetCustomAttributes<ResolvedLoader>(false).Any())
       {
         ParameterInfo[] parameters = method.GetParameters();
         List<object> args = [];
-        foreach (ParameterInfo parameter in parameters)
-        {
+        foreach (ParameterInfo parameter in parameters) 
           args.Add(Retrieve(parameter.ParameterType));
-        }
 
         method.Invoke(candidate, args.ToArray());
       }
-    }
   }
 
   private object Retrieve(Type type)
@@ -113,7 +105,7 @@ public sealed class DependencyInjector
     {
       if (dep.Type == type)
       {
-        return dep;
+        return dep.DependencyObject;
       }
     }
 

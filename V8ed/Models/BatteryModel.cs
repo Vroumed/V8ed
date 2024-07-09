@@ -1,9 +1,10 @@
-﻿using Vroumed.V8ed.Controllers.Attributes;
+﻿using Vroumed.V8ed.Controllers;
+using Vroumed.V8ed.Controllers.Attributes;
 
 namespace Vroumed.V8ed.Models;
 
-[CrudTable("batter_event")]
-public class EventBattery
+[CrudTable("battery_event")]
+public class EventBattery : Crud
 {
   [CrudColumn("id", primaryKey: true, isAutoIncrement: true)]
   public int Id { get; set; }

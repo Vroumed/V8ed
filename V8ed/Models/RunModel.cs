@@ -1,9 +1,10 @@
-﻿using Vroumed.V8ed.Controllers.Attributes;
+﻿using Vroumed.V8ed.Controllers;
+using Vroumed.V8ed.Controllers.Attributes;
 
 namespace Vroumed.V8ed.Models;
 
 [CrudTable("runs")]
-public class Run
+public class Run : Crud
 {
 
   #region Columns
