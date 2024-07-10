@@ -9,7 +9,7 @@ public class CrudColumn : Attribute
   public bool CanBeNull { get; }
   public object? Default { get; }
 
-  public CrudColumn(string name, bool primaryKey = false,bool isAutoIncrement = false, bool canBeNull = true, object @default = null) 
+  public CrudColumn(string name, bool primaryKey = false, bool isAutoIncrement = false, bool canBeNull = true, object @default = null)
   {
     Name = name;
     PrimaryKey = primaryKey;

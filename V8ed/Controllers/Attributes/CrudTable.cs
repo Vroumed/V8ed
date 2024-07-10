@@ -4,7 +4,7 @@
 public class CrudTable : Attribute
 {
   public string Name { get; }
-  public CrudTable(string name) 
+  public CrudTable(string name)
   {
     Name = name;
   }

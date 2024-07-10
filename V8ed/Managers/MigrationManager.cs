@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Vroumed.V8ed.Controllers;
 using Vroumed.V8ed.Controllers.Attributes;
 using Vroumed.V8ed.Dependencies;
-using System.Linq;
 using Vroumed.V8ed.Extensions;
 
 namespace Vroumed.V8ed.Managers;
@@ -25,18 +25,17 @@ public class MigrationManager : IDependencyCandidate
     { typeof(int), "INT" },
     { typeof(long), "BIGINT" },
     { typeof(float), "FLOAT" },
-    { typeof(double), "DOUBLE" }, 
-    { typeof(decimal), "DECIMAL(18, 2)" }, 
-    { typeof(bool), "TINYINT(1)" }, 
+    { typeof(double), "DOUBLE" },
+    { typeof(decimal), "DECIMAL(18, 2)" },
+    { typeof(bool), "TINYINT(1)" },
     { typeof(char), "CHAR(1)" },
-    { typeof(string), "VARCHAR(255)" }, 
+    { typeof(string), "VARCHAR(255)" },
     { typeof(DateTime), "DATETIME" },
-    { typeof(DateTimeOffset), "DATETIME" }, 
+    { typeof(DateTimeOffset), "DATETIME" },
     { typeof(TimeSpan), "TIME" },
-    { typeof(Guid), "CHAR(36)" }, 
+    { typeof(Guid), "CHAR(36)" },
     { typeof(byte[]), "BLOB" }
   };
-
 
   [ResolvedLoader]
   private void Load()
@@ -47,7 +46,7 @@ public class MigrationManager : IDependencyCandidate
     {
       CreateInstructions.Add(GenerateCreateInstructionsFor(type));
       string alterInstruction = GenerateConstraintsInstructionsFor(type);
-      if (!string.IsNullOrWhiteSpace(alterInstruction)) 
+      if (!string.IsNullOrWhiteSpace(alterInstruction))
         ConstraintsInstructions.Add(alterInstruction);
     }
 

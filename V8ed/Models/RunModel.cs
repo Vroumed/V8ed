@@ -12,10 +12,10 @@ public class Run : Crud
   [CrudColumn("id", primaryKey: true, isAutoIncrement: true)]
   public int Id { get; set; }
 
-  [CrudColumn("is_competitive", canBeNull:false)]
+  [CrudColumn("is_competitive", canBeNull: false)]
   public bool IsCompetitive { get; set; }
 
-  [CrudColumn("is_auto", canBeNull:false)]
+  [CrudColumn("is_auto", canBeNull: false)]
   public bool IsAuto { get; set; }
 
   [CrudColumn("estimated_distance", canBeNull: false)]

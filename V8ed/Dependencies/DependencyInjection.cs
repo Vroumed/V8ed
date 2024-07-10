@@ -92,7 +92,7 @@ public sealed class DependencyInjector
       {
         ParameterInfo[] parameters = method.GetParameters();
         List<object> args = [];
-        foreach (ParameterInfo parameter in parameters) 
+        foreach (ParameterInfo parameter in parameters)
           args.Add(Retrieve(parameter.ParameterType));
 
         method.Invoke(candidate, args.ToArray());

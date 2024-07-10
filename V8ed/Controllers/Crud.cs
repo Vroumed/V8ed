@@ -1,22 +1,22 @@
-﻿using System.Reflection;
-using Vroumed.V8ed.Controllers.Attributes;
-using Vroumed.V8ed.Dependencies;
-using Vroumed.V8ed.Managers;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Vroumed.V8ed.Controllers.Attributes;
+using Vroumed.V8ed.Dependencies;
 using Vroumed.V8ed.Extensions;
-using System.Collections;
+using Vroumed.V8ed.Managers;
 
 namespace Vroumed.V8ed.Controllers;
 
 public abstract class Crud : IDependencyCandidate
 {
   [Resolved]
-  private DatabaseManager DatabaseManager { get; set;  }
+  private DatabaseManager DatabaseManager { get; set; }
 
   [Resolved]
-  private DependencyInjector DependencyInjector { get; set;  }
+  private DependencyInjector DependencyInjector { get; set; }
 
   [ResolvedLoader]
   private void Load()
@@ -119,7 +119,7 @@ public abstract class Crud : IDependencyCandidate
     await SaveEnumerables();
   }
 
-  private async Task SaveEnumerables(bool deleteOnly = true) 
+  private async Task SaveEnumerables(bool deleteOnly = true)
   {
     CrudTable table = GetType().GetCustomAttributes().FirstOrDefault(a => a is CrudTable) as CrudTable
                       ?? throw new InvalidOperationException($"Type {GetType().Name} does not have the required attribute {nameof(CrudTable)}");
@@ -140,16 +140,16 @@ public abstract class Crud : IDependencyCandidate
       delete += string.Join(" AND ",
         ens.Select(e => $"{e.ColumnExtern} {e.ComparisonType.ToSqlOperator()} @{e.ColumnLocal}"));
 
-      Dictionary<string, object?> parameters = 
-        ens.ToDictionary(crudEnumerableWhere => 
-          crudEnumerableWhere.ColumnLocal, 
+      Dictionary<string, object?> parameters =
+        ens.ToDictionary(crudEnumerableWhere =>
+          crudEnumerableWhere.ColumnLocal,
           crudEnumerableWhere => GetColumns()
             .FirstOrDefault(s => s.column.Name == crudEnumerableWhere.ColumnLocal)
             .prop.GetValue(this));
 
       DatabaseManager.Execute(delete, parameters);
 
-      if (deleteOnly) 
+      if (deleteOnly)
         continue;
 
       if (property.GetValue(this) is not IEnumerable enumerable)
@@ -180,7 +180,7 @@ public abstract class Crud : IDependencyCandidate
 
     Dictionary<string, object?> parameters = columns.ToDictionary(c => c.column.Name, c =>
     {
-      if (!c.prop.PropertyType.IsAssignableTo(typeof(Crud))) 
+      if (!c.prop.PropertyType.IsAssignableTo(typeof(Crud)))
         return c.prop.GetValue(this)!;
 
       if (c.prop.GetValue(this) is not Crud obj)
