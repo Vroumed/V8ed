@@ -66,7 +66,6 @@ public abstract class Crud : IDependencyCandidate
       if (data == null)
         return;
 
-
       ExistsInDatabase = true;
 
       foreach ((PropertyInfo prop, CrudColumn col) in columns)
@@ -146,7 +145,7 @@ public abstract class Crud : IDependencyCandidate
     List<(PropertyInfo prop, CrudColumn column)> columns = this.GetColumns();
     (PropertyInfo prop, CrudColumn column) autoIncrementColumn = columns.FirstOrDefault(c => c.column.IsAutoIncrement);
 
-    if (autoIncrementColumn.prop != null && !autoIncrementColumn.prop.GetValue(this).Equals(autoIncrementColumn.prop.PropertyType.GetDefaultValue()))
+    if (autoIncrementColumn.prop != null && !autoIncrementColumn.prop.GetValue(this)!.Equals(autoIncrementColumn.prop.PropertyType.GetDefaultValue()))
       throw new InvalidOperationException($"Column {autoIncrementColumn.column.Name} is auto-increment and its value must be null before insert.");
 
     string columnNames = string.Join(", ", columns.Where(c => !c.column.IsAutoIncrement).Select(c => c.column.Name));
@@ -177,7 +176,7 @@ public abstract class Crud : IDependencyCandidate
         WHERE table_name = '{tableName}'
         AND table_schema = '{DatabaseManager.Database}'
         """;
-      Dictionary<string, object>? lastInsertId = await DatabaseManager.FetchOne(lastInsertIdQuery, null);
+      Dictionary<string, object> lastInsertId = (await DatabaseManager.FetchOne(lastInsertIdQuery))!;
       autoIncrementColumn.prop.SetValue(this, Convert.ChangeType(lastInsertId["lastId"], autoIncrementColumn.prop.PropertyType));
     }
 
@@ -235,9 +234,7 @@ public abstract class Crud : IDependencyCandidate
 
     (PropertyInfo prop, CrudColumn pk) primaryKeyColumn = pkc.Value;
 
-    object? pkValue = primaryKeyColumn.prop.GetValue(this);
-    if (pkValue == null)
-      throw new InvalidOperationException($"{GetType().Name} has no '{primaryKeyColumn.prop.Name}' filled, therefore cannot update");
+    object? pkValue = primaryKeyColumn.prop.GetValue(this) ?? throw new InvalidOperationException($"{GetType().Name} has no '{primaryKeyColumn.prop.Name}' filled, therefore cannot update");
 
     if (!ExistsInDatabase)
       throw new InvalidOperationException($"{GetType().Name} with ({primaryKeyColumn.prop.Name}) {primaryKeyColumn.pk.Name} = {pkValue} does not exists in {tableName}");

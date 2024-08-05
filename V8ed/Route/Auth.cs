@@ -53,22 +53,21 @@ public class Auth : ControllerBase
     {
       roverIP = IPAddress.Parse(login.RoverIP);
     }
-    catch (FormatException ex)
+    catch (FormatException)
     {
       session.RoverManager.ConnectionAttempt++;
       return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "auth", "Provided ip was invalid"));
     }
 
-
-    Uri apiUri = new Uri($"http://{roverIP.ToString()}/wrover");
-    HttpClient client = new HttpClient();
+    Uri apiUri = new($"http://{roverIP.ToString()}/wrover");
+    HttpClient client = new();
     HttpResponseMessage response;
 
     try
     {
       response = await client.GetAsync(apiUri);
     }
-    catch (HttpRequestException ex)
+    catch (HttpRequestException)
     {
       session.RoverManager.ConnectionAttempt++;
       return Conflict(this.GetStatusError(HttpStatusCode.Conflict, "rover-no-response", "Rover is not available"));
@@ -99,8 +98,6 @@ public class Auth : ControllerBase
       return Conflict(this.GetStatusError(HttpStatusCode.Conflict, "rover-occupied", "Rover is not ready to accept server connections"));
     }
 
-
-
     session.RoverIP = roverIP;
     RoverManager.ConnectionStatus status = await session.RoverManager.Connect(new Uri($"ws://{roverIP.ToString()}/ws"), login.RoverKey);
 
@@ -112,7 +109,7 @@ public class Auth : ControllerBase
           { "token", session.SessionId }
         };
 
-        Car car = new Car()
+        Car car = new()
         {
           HardwareID = roverApiResponse.Id
         };
@@ -134,7 +131,6 @@ public class Auth : ControllerBase
         _injector.Resolve(session.RoverManager.Connection);
 
         session.RoverManager.Connection.Insert();
-
 
         return Ok(data);
       case RoverManager.ConnectionStatus.Busy:

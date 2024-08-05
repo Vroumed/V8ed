@@ -16,7 +16,7 @@ public class RoverManager
     WrongApiKey,
   }
 
-  struct ConnectionString
+  readonly struct ConnectionString
   {
     public ConnectionString()
     {
@@ -29,7 +29,6 @@ public class RoverManager
     public required string ApiKey { get; init; }
   }
 
-
   public int ConnectionAttempt { get; set; } = 0;
 
   #region Telemetry
@@ -37,13 +36,11 @@ public class RoverManager
   public Car Car { get; set; } = null!;
   public Connection Connection { get; set; } = null!;
 
-
   #endregion
 
-
-  private ClientWebSocket WebSocket { get; } = new ClientWebSocket();
-  private Task WebscoketEventLoop { get; set; }
-  private CancellationTokenSource CancellationTokenSource { get; set; }
+  private ClientWebSocket WebSocket { get; } = new();
+  private Task WebscoketEventLoop { get; set; } = null!;
+  private CancellationTokenSource CancellationTokenSource { get; set; } = null!;
 
   public bool Connected { get; private set; }
 
@@ -61,9 +58,9 @@ public class RoverManager
     ArraySegment<byte> sendBuffer = new(messageBytes);
     await WebSocket.SendAsync(sendBuffer, WebSocketMessageType.Text, true, CancellationToken.None);
 
-    ArraySegment<byte> receiveBuffer = new ArraySegment<byte>(new byte[1024]);
+    ArraySegment<byte> receiveBuffer = new(new byte[1024]);
     WebSocketReceiveResult result = await WebSocket.ReceiveAsync(receiveBuffer, CancellationToken.None);
-    string receivedMessage = Encoding.UTF8.GetString(receiveBuffer.Array, 0, result.Count);
+    string receivedMessage = Encoding.UTF8.GetString(receiveBuffer.Array!, 0, result.Count);
 
     if (receivedMessage == "ok")
     {
@@ -91,15 +88,15 @@ public class RoverManager
   {
     while (Connected)
     {
-      ArraySegment<byte> receiveBuffer = new ArraySegment<byte>(new byte[1024]);
+      ArraySegment<byte> receiveBuffer = new(new byte[1024]);
       WebSocketReceiveResult result = await WebSocket.ReceiveAsync(receiveBuffer, CancellationToken.None);
-      string receivedMessage = Encoding.UTF8.GetString(receiveBuffer.Array, 0, result.Count);
+      string receivedMessage = Encoding.UTF8.GetString(receiveBuffer.Array!, 0, result.Count);
       await HandlePacket(receivedMessage);
     }
   }
 
   private async Task HandlePacket(string receivedMessage)
   {
-    
+    await Task.Delay(receivedMessage.Length);
   }
 }

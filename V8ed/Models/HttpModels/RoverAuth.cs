@@ -2,6 +2,6 @@
 
 public class RoverAuth
 {
-  public string RoverIP { get; set; }
-  public string RoverKey { get; set; }
+  public string RoverIP { get; set; } = null!;
+  public string RoverKey { get; set; } = null!;
 }
