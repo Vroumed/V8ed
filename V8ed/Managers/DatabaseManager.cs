@@ -1,4 +1,5 @@
 ﻿using MySqlConnector;
+using System.Data;
 using Vroumed.V8ed.Models.Configuration;
 
 namespace Vroumed.V8ed.Managers;
@@ -126,7 +127,8 @@ public class DatabaseManager
     while (await Reader.ReadAsync())
     {
       Dictionary<string, T> row = new();
-
+      for (int i = 0; i < Reader!.FieldCount; i++)
+        row[Reader.GetName(i)] = (T) Reader.GetValue(i);
       result.Add(row);
     }
 
@@ -134,14 +136,24 @@ public class DatabaseManager
     return result;
   }
 
-  public async Task Execute(string query, IDictionary<string, object>? parameters = null)
+  public async Task Execute(string query, IDictionary<string, object?>? parameters = null)
   {
-    await Connection.OpenAsync();
-    MySqlCommand command = new(query, Connection, Transaction);
-    if (parameters != null)
-      command.Parameters.AddRange(parameters.ToArray());
-    await command.ExecuteNonQueryAsync();
-    await Connection.CloseAsync();
+    try
+    {
+      await Connection.OpenAsync();
+      MySqlCommand command = new(query, Connection, Transaction);
+
+      if (parameters != null)
+        foreach ((string key, object? value) in parameters)
+          command.Parameters.Add(new MySqlParameter(key, value));
+
+      await command.ExecuteNonQueryAsync();
+    }
+    finally
+    {
+      await Connection.CloseAsync();
+    }
+
   }
 
   public async Task OpenReader(string query, IDictionary<string, object>? parameters = null)

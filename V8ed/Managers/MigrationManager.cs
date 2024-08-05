@@ -5,6 +5,7 @@ using System.Text;
 using Vroumed.V8ed.Controllers;
 using Vroumed.V8ed.Controllers.Attributes;
 using Vroumed.V8ed.Dependencies;
+using Vroumed.V8ed.Dependencies.Attributes;
 using Vroumed.V8ed.Extensions;
 
 namespace Vroumed.V8ed.Managers;
@@ -12,7 +13,7 @@ namespace Vroumed.V8ed.Managers;
 public class MigrationManager : IDependencyCandidate
 {
   [Resolved]
-  private DatabaseManager DatabaseManager { get; set; }
+  private DatabaseManager DatabaseManager { get; set; } = null!;
 
   private List<string> CreateInstructions { get; } = new();
 

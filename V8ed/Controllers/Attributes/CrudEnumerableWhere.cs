@@ -1,6 +1,6 @@
 ﻿namespace Vroumed.V8ed.Controllers.Attributes;
 
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
+[AttributeUsage(AttributeTargets.Property)]
 public class CrudEnumerableWhere : Attribute
 {
   public string ColumnLocal { get; }
