@@ -29,20 +29,20 @@ public class Run : Crud
   #region Foreign Keys
 
   [CrudColumn("car", canBeNull: false)]
-  public Car Car { get; set; }
+  public Car Car { get; set; } = null!;
 
   [CrudColumn("connection", canBeNull: false)]
-  public Connection Connection { get; set; }
+  public Connection Connection { get; set; } = null!;
 
   #endregion
 
   #region Computed Enumerables
 
   [CrudEnumerableWhere("id", ComparisonType.EQUAL, "run_id")]
-  public IEnumerable<Collision> Collisions { get; set; }
+  public IEnumerable<Collision> Collisions { get; set; } = null!;
 
   [CrudEnumerableWhere("id", ComparisonType.EQUAL, "run_id")]
-  public IEnumerable<OffRoadTracking> OffRoads { get; set; }
+  public IEnumerable<OffRoadTracking> OffRoads { get; set; } = null!;
 
   #endregion
 }
