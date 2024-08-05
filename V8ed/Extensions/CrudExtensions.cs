@@ -45,7 +45,7 @@ public static class CrudExtensions
   {
     //get CrudTable attribute from type class
     return ((CrudTable) (t.GetCustomAttributes(true)
-    .FirstOrDefault(s => s is CrudTable) 
+    .FirstOrDefault(s => s is CrudTable)
                          ?? throw new InvalidOperationException($"type {t.Name} has no {nameof(CrudTable)} attribute")))
     .Name;
   }

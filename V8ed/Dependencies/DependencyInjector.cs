@@ -83,7 +83,7 @@ public sealed class DependencyInjector
       properties.AddRange(t.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
       t = t.BaseType;
     }
-    
+
     foreach (PropertyInfo property in properties)
       if (property.GetCustomAttributes(false).Any(s => s is Resolved))
         property.SetValue(candidate, Retrieve(property.PropertyType));
@@ -96,6 +96,7 @@ public sealed class DependencyInjector
       methods.AddRange(t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
       t = t.BaseType;
     }
+
     foreach (MethodInfo method in methods)
     {
       List<object> args = new();

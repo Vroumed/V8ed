@@ -153,7 +153,6 @@ public class DatabaseManager
     {
       await Connection.CloseAsync();
     }
-
   }
 
   public async Task OpenReader(string query, IDictionary<string, object>? parameters = null)

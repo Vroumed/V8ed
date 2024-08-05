@@ -101,16 +101,16 @@ public abstract class Crud : IDependencyCandidate
         string pk = genericType.GetColumns().First(s => s.prop == pkProp).column.Name;
 
         string query = $"SELECT {pk} FROM {foreignTable} WHERE {clause.ColumnExtern} = @value";
-        Dictionary<string, object> parameters = new Dictionary<string, object>
+        Dictionary<string, object> parameters = new()
         {
           ["value"] = data[clause.ColumnLocal]
         };
 
         List<Dictionary<string, object>> result = await DatabaseManager.FetchAll(query, parameters);
-        
+
         Type listType = typeof(List<>).MakeGenericType(genericType);
         object? listInstance = Activator.CreateInstance(listType);
-        
+
         MethodInfo? addMethod = listType.GetMethod("Add");
 
         foreach (Dictionary<string, object> dictionary in result)
@@ -118,14 +118,14 @@ public abstract class Crud : IDependencyCandidate
           if (Activator.CreateInstance(genericType) is not Crud child)
             throw new InvalidOperationException(
               $"Type {genericType.Name} linked from {prop.Name} is not a Valid Foreign Key");
-          
+
           pkProp.SetValue(child, dictionary[pk]);
 
           DependencyInjector.Resolve(child);
-          
+
           addMethod?.Invoke(listInstance, new[] { child });
         }
-        
+
         prop.SetValue(this, listInstance);
 
       }
@@ -196,7 +196,7 @@ public abstract class Crud : IDependencyCandidate
 
       string delete = $"DELETE FROM {tableName} WHERE  {ens.ColumnExtern} {ens.ComparisonType.ToSqlOperator()} @value";
 
-      Dictionary<string, object?> parameters = new Dictionary<string, object?>()
+      Dictionary<string, object?> parameters = new()
       {
         {"value", this.GetColumns().First(s => s.column.Name == ens.ColumnLocal).prop.GetValue(this)}
       };
