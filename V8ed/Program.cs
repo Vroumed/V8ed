@@ -1,5 +1,7 @@
 using Vroumed.V8ed.Dependencies;
+using Vroumed.V8ed.Extensions;
 using Vroumed.V8ed.Managers;
+using Vroumed.V8ed.Models;
 using Vroumed.V8ed.Models.Configuration;
 
 namespace Vroumed.V8ed;
@@ -13,11 +15,13 @@ internal class Program
     DependencyInjector dependencyInjector = new();
     builder.Services.AddSingleton(dependencyInjector);
     ServerConfiguration conf = builder.Configuration.GetSection(ServerConfiguration.SECTION_NAME).Get<ServerConfiguration>()!;
-    DatabaseManager DBmanager = new(conf);
-    dependencyInjector.Cache(DBmanager);
-    dependencyInjector.Cache(dependencyInjector);
 
-    long count = Task.Run(async () => await DBmanager.FetchOne<long>("SELECT COUNT(*) count FROM information_schema.tables WHERE table_schema = @schema;", new Dictionary<string, object>()
+    dependencyInjector.CacheTransient(() => new DatabaseManager(conf));
+    dependencyInjector.CacheSingleton(dependencyInjector);
+
+    DatabaseManager dbManager = dependencyInjector.Retrieve<DatabaseManager>();
+
+    long count = Task.Run(async () => await dbManager.FetchOne<long>("SELECT COUNT(*) count FROM information_schema.tables WHERE table_schema = @schema;", new Dictionary<string, object>()
     {
       ["schema"] = conf.Database,
     })).Result!["count"];

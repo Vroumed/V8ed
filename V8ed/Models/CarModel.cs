@@ -6,9 +6,9 @@ namespace Vroumed.V8ed.Models;
 [CrudTable("cars")]
 public class Car : Crud
 {
-  [CrudColumn("api_key", primaryKey: true)]
-  public string ApiKey { get; set; }
+  [CrudColumn("hwid", primaryKey: true)]
+  public string HardwareID { get; set; } = string.Empty;
 
   [CrudColumn("car_name")]
-  public string CarName { get; set; }
+  public string CarName { get; set; } = string.Empty;
 }
