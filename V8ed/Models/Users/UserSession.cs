@@ -1,19 +1,21 @@
 ﻿using System.Net;
+using Vroumed.V8ed.Managers;
 
 namespace Vroumed.V8ed.Models.Users;
 
 public class UserSession
 {
-  public string? LinkedRover { get; set; }
   public string SessionId { get; }
-  public bool Logged => LinkedRover != null;
-  public IPAddress? IpAddress { get; init; }
+  public bool Logged => RoverManager.Connected;
+  public IPAddress? ClientIP { get; init; }
+  public IPAddress? RoverIP { get; set; }
   public DateTime LastActivity { get; set; } = DateTime.UtcNow;
+  public RoverManager RoverManager { get; } = new();
 
-  public UserSession(string sessionId, IPAddress? ipAddress)
+  public UserSession(string sessionId, IPAddress? clientIp)
   {
     SessionId = sessionId;
-    IpAddress = ipAddress;
+    ClientIP = clientIp;
   }
 
   public static UserSession FromContext(HttpContext context)

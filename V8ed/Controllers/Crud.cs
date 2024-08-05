@@ -20,6 +20,8 @@ public abstract class Crud : IDependencyCandidate
   [Resolved]
   private DependencyInjector DependencyInjector { get; set; } = null!;
 
+  public bool ExistsInDatabase { get; private set; } = false;
+
   [ResolvedLoader]
   private void Load()
   {
@@ -63,6 +65,9 @@ public abstract class Crud : IDependencyCandidate
 
       if (data == null)
         return;
+
+
+      ExistsInDatabase = true;
 
       foreach ((PropertyInfo prop, CrudColumn col) in columns)
         if (prop.PropertyType.IsAssignableTo(typeof(Crud)))
@@ -176,6 +181,8 @@ public abstract class Crud : IDependencyCandidate
       autoIncrementColumn.prop.SetValue(this, Convert.ChangeType(lastInsertId["lastId"], autoIncrementColumn.prop.PropertyType));
     }
 
+    ExistsInDatabase = true;
+
     await SaveEnumerables();
   }
 
@@ -216,6 +223,7 @@ public abstract class Crud : IDependencyCandidate
 
   public async Task Update()
   {
+
     CrudTable table = GetType().GetCustomAttributes().FirstOrDefault(a => a is CrudTable) as CrudTable
                       ?? throw new InvalidOperationException($"Type {GetType().Name} does not have the required attribute {nameof(CrudTable)}");
 
@@ -226,6 +234,13 @@ public abstract class Crud : IDependencyCandidate
       throw new InvalidOperationException($"Type {GetType().Name} does not have a primary key column.");
 
     (PropertyInfo prop, CrudColumn pk) primaryKeyColumn = pkc.Value;
+
+    object? pkValue = primaryKeyColumn.prop.GetValue(this);
+    if (pkValue == null)
+      throw new InvalidOperationException($"{GetType().Name} has no '{primaryKeyColumn.prop.Name}' filled, therefore cannot update");
+
+    if (!ExistsInDatabase)
+      throw new InvalidOperationException($"{GetType().Name} with ({primaryKeyColumn.prop.Name}) {primaryKeyColumn.pk.Name} = {pkValue} does not exists in {tableName}");
 
     // Building the SET part of the query
     string setClause = string.Join(", ", columns.Where(c => !c.column.PrimaryKey).Select(c => $"{c.column.Name} = @{c.column.Name}"));
@@ -272,6 +287,7 @@ public abstract class Crud : IDependencyCandidate
     };
 
     await DatabaseManager.Execute(query, parameters);
+    ExistsInDatabase = false;
 
     await SaveEnumerables(true);
   }

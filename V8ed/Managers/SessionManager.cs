@@ -61,7 +61,7 @@ public class SessionManager
 
     session = Sessions[sessionId];
 
-    if (!Equals(context.Connection.RemoteIpAddress, session.IpAddress))
+    if (!Equals(context.Connection.RemoteIpAddress, session.ClientIP))
     {
       // The session IP has changed, the token may has been spoofed, disconnect the session and make a new one for the user
       _sessions.Remove(sessionId);
