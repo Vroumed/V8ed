@@ -11,7 +11,7 @@ public class RoverManager
   public enum ConnectionStatus
   {
     Ok,
-    Busy, 
+    Busy,
     NoClient,
     WrongApiKey,
   }
@@ -22,7 +22,7 @@ public class RoverManager
     {
     }
 
-    [JsonProperty("type")] 
+    [JsonProperty("type")]
     public byte Type { get; } = 1;
 
     [JsonProperty("apiKey")]

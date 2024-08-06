@@ -12,6 +12,6 @@ public class Connection : Crud
   [CrudColumn("try_count", canBeNull: false, @default: 0)]
   public int TryCount { get; set; }
 
-  [CrudColumn("time", canBeNull:false)]
+  [CrudColumn("time", canBeNull: false)]
   public DateTime Time { get; set; }
 }

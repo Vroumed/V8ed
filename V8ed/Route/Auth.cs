@@ -126,7 +126,8 @@ public class Auth : ControllerBase
 
         session.RoverManager.Connection = new Connection()
         {
-          TryCount = session.RoverManager.ConnectionAttempt, Time = DateTime.Now,
+          TryCount = session.RoverManager.ConnectionAttempt,
+          Time = DateTime.Now,
         };
         _injector.Resolve(session.RoverManager.Connection);
 
