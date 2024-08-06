@@ -1,6 +1,7 @@
 using Vroumed.V8ed.Dependencies;
 using Vroumed.V8ed.Extensions;
 using Vroumed.V8ed.Managers;
+using Vroumed.V8ed.Managers.Middlewares;
 using Vroumed.V8ed.Models;
 using Vroumed.V8ed.Models.Configuration;
 
@@ -14,6 +15,7 @@ internal class Program
 
     DependencyInjector dependencyInjector = new();
     builder.Services.AddSingleton(dependencyInjector);
+    builder.Services.AddSingleton(new SessionManager());
     ServerConfiguration conf = builder.Configuration.GetSection(ServerConfiguration.SECTION_NAME).Get<ServerConfiguration>()!;
 
     dependencyInjector.CacheTransient(() => new DatabaseManager(conf));
@@ -33,6 +35,8 @@ internal class Program
       dependencyInjector.Resolve(manager);
     }
 
+    builder.Services.AddHttpContextAccessor();
+
     // Add services to the container.
     builder.Services.AddControllers();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -48,12 +52,7 @@ internal class Program
       app.UseSwaggerUI();
     }
 
-    WebSocketOptions webSocketOptions = new()
-    {
-      KeepAliveInterval = TimeSpan.FromMinutes(2)
-    };
-
-    app.UseWebSockets(webSocketOptions);
+    app.UseMiddleware<SessionMiddleware>();
 
     app.UseHttpsRedirection();
     app.UseAuthorization();
