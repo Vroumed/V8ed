@@ -39,7 +39,7 @@ public class RoverManager
   #endregion
 
   private ClientWebSocket WebSocket { get; } = new();
-  private Task WebscoketEventLoop { get; set; } = null!;
+  private Task WebsocketEventLoop { get; set; } = null!;
   private CancellationTokenSource CancellationTokenSource { get; set; } = null!;
 
   public bool Connected { get; private set; }
@@ -81,7 +81,7 @@ public class RoverManager
 
   private Task StartEventLoop(CancellationToken token)
   {
-    return WebscoketEventLoop = Task.Run(EventLoop, token);
+    return WebsocketEventLoop = Task.Run(EventLoop, token);
   }
 
   private async void EventLoop()
@@ -98,5 +98,9 @@ public class RoverManager
   private async Task HandlePacket(string receivedMessage)
   {
     await Task.Delay(receivedMessage.Length);
+    Console.WriteLine(receivedMessage);
+    Console.WriteLine(string.Empty);
+    Console.WriteLine(new string('=', 32));
+    Console.WriteLine(string.Empty);
   }
 }
