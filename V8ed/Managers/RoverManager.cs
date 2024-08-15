@@ -2,12 +2,12 @@
 using System.Net.WebSockets;
 using System.Text;
 using Vroumed.V8ed.Models;
+using Vroumed.V8ed.Models.Rover;
 
 namespace Vroumed.V8ed.Managers;
 
 public class RoverManager
 {
-
   public enum ConnectionStatus
   {
     Ok,
@@ -36,6 +36,8 @@ public class RoverManager
   public Car Car { get; set; } = null!;
   public Connection Connection { get; set; } = null!;
 
+  public List<(DateTime time, RoverReading reading)> Readings { get; set; }
+
   #endregion
 
   private ClientWebSocket WebSocket { get; } = new();
@@ -43,6 +45,11 @@ public class RoverManager
   private CancellationTokenSource CancellationTokenSource { get; set; } = null!;
 
   public bool Connected { get; private set; }
+
+  /// <summary>
+  /// event trigger that can be sub to receive rover readings
+  /// </summary>
+  public event Action<RoverReading> OnRoverReading;
 
   public async Task<ConnectionStatus> Connect(Uri url, string apiKey)
   {
@@ -86,21 +93,33 @@ public class RoverManager
 
   private async void EventLoop()
   {
-    while (Connected)
+    try
     {
-      ArraySegment<byte> receiveBuffer = new(new byte[1024]);
-      WebSocketReceiveResult result = await WebSocket.ReceiveAsync(receiveBuffer, CancellationToken.None);
-      string receivedMessage = Encoding.UTF8.GetString(receiveBuffer.Array!, 0, result.Count);
-      await HandlePacket(receivedMessage);
+      while (Connected)
+      {
+        ArraySegment<byte> receiveBuffer = new(new byte[1024]);
+        WebSocketReceiveResult result = await WebSocket.ReceiveAsync(receiveBuffer, CancellationToken.None);
+        string receivedMessage = Encoding.UTF8.GetString(receiveBuffer.Array!, 0, result.Count);
+        await HandlePacket(receivedMessage);
+      }
+    }
+    finally
+    {
+      Connected = false;
     }
   }
 
   private async Task HandlePacket(string receivedMessage)
   {
-    await Task.Delay(receivedMessage.Length);
-    Console.WriteLine(receivedMessage);
-    Console.WriteLine(string.Empty);
-    Console.WriteLine(new string('=', 32));
-    Console.WriteLine(string.Empty);
+    RoverReading? reading = JsonConvert.DeserializeObject<RoverReading>(receivedMessage);
+
+    if (reading == null)
+      return; // TODO @Helvece, log an error using your log management system
+
+    await Task.Run(() =>
+    {
+      Readings.Add((DateTime.Now, reading));
+      OnRoverReading?.Invoke(reading);
+    });
   }
 }
