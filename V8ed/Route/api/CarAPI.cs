@@ -68,4 +68,24 @@ public class CarAPI : ControllerBase
 
     return NoContent();
   }
+
+  /// <summary>
+  /// Get all cars.
+  /// </summary>
+  /// <returns>List of all <see cref="Car"/>.</returns>
+  [HttpGet]
+  [SwaggerResponse(200, "List of all cars", typeof(IEnumerable<Car>))]
+  [Route("get/all")]
+  public async Task<IActionResult> GetAllCars()
+  {
+    // Assume GetAllCars method is implemented in the DependencyInjector or a related service
+    var cars = _injector.RetrieveAll<Car>().ToList();
+
+    if (cars == null || !cars.Any())
+    {
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, "Cars", "No cars found"));
+    }
+
+    return Ok(cars);
+  }
 }

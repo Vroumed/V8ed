@@ -120,4 +120,11 @@ public sealed class DependencyInjector
   {
     return (T) Dependencies.FirstOrDefault(dep => dep.Type == typeof(T))?.GetObject()! ?? throw new Exception("Dependency not found");
   }
+
+  public IEnumerable<T> RetrieveAll<T>()
+  {
+    return Dependencies
+        .Where(dep => dep.Type == typeof(T))
+        .Select(dep => (T) dep.GetObject());
+  }
 }
