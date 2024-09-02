@@ -10,32 +10,15 @@ public class Logger
 
   public Logger()
   {
-    // Boucle sur tous les enums pour initialiser les fichiers de log par défaut
+    Directory.CreateDirectory("Logs");
     foreach (LogFile logFile in Enum.GetValues(typeof(LogFile)).Cast<LogFile>())
     {
-      string defaultPath = Path.Combine("Serveurlog", $"{logFile}.txt");
+      string defaultPath = Path.Combine("Logs", $"{logFile}.txt");
+      File.CreateText(defaultPath).Close();
       _logFiles[logFile] = defaultPath;
     }
   }
 
-  // Méthode pour enregistrer un fichier de log avec un type spécifique
-  public void RegisterLogFile(LogFile logName, string filePath)
-  {
-    if (string.IsNullOrWhiteSpace(filePath))
-    {
-      throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
-    }
-
-    string directoryPath = Path.GetDirectoryName(filePath);
-    if (!Directory.Exists(directoryPath))
-    {
-      Directory.CreateDirectory(directoryPath);
-    }
-
-    _logFiles[logName] = filePath;
-  }
-
-  // Méthode pour enregistrer un message dans le fichier de log spécifié
   public void Log(LogFile logName, string message)
   {
     if (!_logFiles.TryGetValue(logName, out string? logFilePath))
@@ -50,7 +33,7 @@ public class Logger
       {
         string logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}: {message}";
         writer.WriteLine(logEntry);
-        Console.WriteLine(logEntry); // Affichage également dans la console
+        Console.WriteLine(logEntry);
       }
     }
     catch (Exception ex)
