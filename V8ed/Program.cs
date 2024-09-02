@@ -4,6 +4,7 @@ using Vroumed.V8ed.Managers;
 using Vroumed.V8ed.Managers.Middlewares;
 using Vroumed.V8ed.Models;
 using Vroumed.V8ed.Models.Configuration;
+using Vroumed.V8ed.Utils.Logger;
 
 namespace Vroumed.V8ed;
 
@@ -20,6 +21,7 @@ internal class Program
 
     dependencyInjector.CacheTransient(() => new DatabaseManager(conf));
     dependencyInjector.CacheSingleton(dependencyInjector);
+    dependencyInjector.CacheSingleton(new Logger());
 
     DatabaseManager dbManager = dependencyInjector.Retrieve<DatabaseManager>();
 
