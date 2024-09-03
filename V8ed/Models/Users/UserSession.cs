@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Vroumed.V8ed.Managers;
+using Vroumed.V8ed.Managers.Engines;
 
 namespace Vroumed.V8ed.Models.Users;
 
@@ -11,6 +12,7 @@ public class UserSession
   public IPAddress? RoverIP { get; set; }
   public DateTime LastActivity { get; set; } = DateTime.UtcNow;
   public RoverManager RoverManager { get; } = new();
+  public RoverAutoEngine? AutoEngine { get; set; }
 
   public UserSession(string sessionId, IPAddress? clientIp)
   {
