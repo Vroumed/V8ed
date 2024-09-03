@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Vroumed.V8ed.Dependencies;
+using Vroumed.V8ed.Dependencies.Attributes;
 using Vroumed.V8ed.Extensions;
+using Vroumed.V8ed.Managers;
 using Vroumed.V8ed.Models;
 
 namespace Vroumed.V8ed.Route.api;
@@ -12,9 +14,12 @@ public class CarAPI : ControllerBase
 {
   private readonly DependencyInjector _injector;
 
+  private DatabaseManager DatabaseManager { get; }
+
   public CarAPI(DependencyInjector injector)
   {
     _injector = injector;
+    DatabaseManager = injector.Retrieve<DatabaseManager>();
   }
 
   /// <summary>
@@ -78,14 +83,15 @@ public class CarAPI : ControllerBase
   [Route("get/all")]
   public async Task<IActionResult> GetAllCars()
   {
-    // Assume GetAllCars method is implemented in the DependencyInjector or a related service
-    var cars = _injector.RetrieveAll<Car>().ToList();
+    List<Dictionary<string, string>> rawCars = await DatabaseManager.FetchAll<string>(
+        "SELECT hwid FROM cars;");
 
-    if (cars == null || !cars.Any())
+    IEnumerable<Car> list = rawCars.Select(row => new Car { HardwareID = row["hwid"] });
+    foreach (Car item in list)
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, "Cars", "No cars found"));
+      _injector.Resolve(item);
     }
 
-    return Ok(cars);
+    return Ok(list);
   }
 }

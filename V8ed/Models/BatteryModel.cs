@@ -14,4 +14,7 @@ public class EventBattery : Crud
 
   [CrudColumn("end_level")]
   public float EndLevel { get; set; }
+
+  [CrudColumn("run_id")]
+  public Run Run { get; set; }
 }
