@@ -14,7 +14,7 @@ public class Logger
     foreach (LogFile logFile in Enum.GetValues(typeof(LogFile)).Cast<LogFile>())
     {
       string defaultPath = Path.Combine("Logs", $"{logFile}.txt");
-      if (!File.Exists(defaultPath)) 
+      if (!File.Exists(defaultPath))
         File.CreateText(defaultPath).Close();
       _logFiles[logFile] = defaultPath;
     }
