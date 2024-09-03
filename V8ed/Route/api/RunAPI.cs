@@ -171,13 +171,13 @@ public class RunAPI : ControllerBase
       "SELECT id FROM offroads Where run_id = @RunId;",
       new Dictionary<string, object>
       {
-         ["RunId"] = run.Id
+        ["RunId"] = run.Id
       });
 
       IEnumerable<OffRoadTracking> listOffRoads = rawOffRoads.Select(row => new OffRoadTracking { Id = row["id"] });
       foreach (OffRoadTracking item in listOffRoads)
       {
-        numberOffRoad ++;
+        numberOffRoad++;
       }
     }
 
