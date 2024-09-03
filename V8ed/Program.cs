@@ -19,7 +19,7 @@ internal class Program
     builder.Services.AddSingleton(new SessionManager());
     ServerConfiguration conf = builder.Configuration.GetSection(ServerConfiguration.SECTION_NAME).Get<ServerConfiguration>()!;
 
-    dependencyInjector.CacheTransient(() => new DatabaseManager(conf));
+    dependencyInjector.CacheTransient<DatabaseManager>(() => new DatabaseManager(conf));
     dependencyInjector.CacheSingleton(dependencyInjector);
     dependencyInjector.CacheSingleton(new Logger());
 
