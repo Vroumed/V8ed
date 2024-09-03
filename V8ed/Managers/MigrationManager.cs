@@ -7,6 +7,7 @@ using Vroumed.V8ed.Controllers.Attributes;
 using Vroumed.V8ed.Dependencies;
 using Vroumed.V8ed.Dependencies.Attributes;
 using Vroumed.V8ed.Extensions;
+using Vroumed.V8ed.Utils.Logger;
 
 namespace Vroumed.V8ed.Managers;
 
@@ -14,6 +15,9 @@ public class MigrationManager : IDependencyCandidate
 {
   [Resolved]
   private DatabaseManager DatabaseManager { get; set; } = null!;
+
+  [Resolved]
+  private Logger Logger { get; set; } = null!;
 
   private List<string> CreateInstructions { get; } = new();
 
@@ -56,13 +60,13 @@ public class MigrationManager : IDependencyCandidate
 
       foreach (string instruction in CreateInstructions)
       {
-        Console.WriteLine(instruction);
+        Logger.Log(LogFile.Debug, instruction);
         await DatabaseManager.Execute(instruction);
       }
 
       foreach (string instruction in ConstraintsInstructions)
       {
-        Console.WriteLine(instruction);
+        Logger.Log(LogFile.Debug, instruction);
         await DatabaseManager.Execute(instruction);
       }
     }).GetAwaiter().GetResult();
