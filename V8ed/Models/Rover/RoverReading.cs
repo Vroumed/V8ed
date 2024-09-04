@@ -19,8 +19,8 @@ public class RoverReading
   [JsonProperty("track_right")]
   public int TrackRight { get; set; }
 
-  [JsonProperty("ultrasonic_di")]
-  public double UltrasonicDistance { get; set; } // On suppose que c'est une distance
+  [JsonProperty("ultrasonic_distance")]
+  public int UltrasonicDistance { get; set; } // On suppose que c'est une distance
 
   [JsonProperty("speed")]
   public int Speed { get; set; }

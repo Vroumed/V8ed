@@ -38,6 +38,11 @@ public class RoverAutoEngine
 
     [JsonProperty("data")]
     public required Dictionary<string, object> Data { get; init; }
+
+    [JsonProperty("impersonate_client")]
+#pragma warning disable IDE0051 // neds to be always sent via websocket
+    private int ImpersonateClient { get; } = 1;
+#pragma warning restore IDE0051
   }
 
   #region Deplacement
