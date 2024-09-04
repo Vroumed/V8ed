@@ -40,7 +40,7 @@ public class RoverManager
 
   #endregion
 
-  private ClientWebSocket WebSocket { get; } = new();
+  public ClientWebSocket WebSocket { get; } = new();
   private Task WebsocketEventLoop { get; set; } = null!;
   private CancellationTokenSource CancellationTokenSource { get; set; } = null!;
 
