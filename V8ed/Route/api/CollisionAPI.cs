@@ -28,8 +28,8 @@ public class CollisionAPI : ControllerBase
   /// <param name="id">Id of the <see cref="Collision"/></param>
   /// <returns></returns>
   [HttpGet]
-  [SwaggerResponse(200, "The collision", typeof(Collision))]
-  [SwaggerResponse(404, "Collision whith id '1' does not exist")]
+  [SwaggerResponse(200, "Collision", typeof(Collision))]
+  [SwaggerResponse(404, "Collision with id '1' does not exist")]
   [Route("get/{id}")]
   public async Task<IActionResult> GetCollisionById(int id)
   {
@@ -39,16 +39,16 @@ public class CollisionAPI : ControllerBase
     };
     _injector.Resolve(collision);
 
-    if (collision.Id == null)
+    if (collision == null)
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Collision whith id '{id}' does not exist"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Collision with id '{id}' does not exist"));
     }
 
     return Ok(collision);
   }
 
   /// <summary>
-  /// GetNumberCollisionByRun return a number of collision from an <paramref name="id"/>
+  /// GetNumberCollisionByRun return a number of collision from an Run id <paramref name="id"/>
   /// </summary>
   /// <param name="id">Id of the <see cref="Run"/></param>
   /// <returns></returns>

@@ -28,8 +28,8 @@ public class CarAPI : ControllerBase
   /// <param name="id">Id of the <see cref="Car"/></param>
   /// <returns></returns>
   [HttpGet]
-  [SwaggerResponse(200, "The voiture", typeof(Car))]
-  [SwaggerResponse(404, "Car whith id '1' does not exist")]
+  [SwaggerResponse(200, "Car", typeof(Car))]
+  [SwaggerResponse(404, "Car with id '1' does not exist")]
   [Route("get/{id}")]
   public async Task<IActionResult> GetCarById(string id)
   {
@@ -41,7 +41,7 @@ public class CarAPI : ControllerBase
 
     if (string.IsNullOrEmpty(car.CarName))
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Car whith id '{id}' does not exist"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Car with id '{id}' does not exist"));
     }
 
     return Ok(car);
@@ -54,7 +54,7 @@ public class CarAPI : ControllerBase
   /// <returns></returns>
   [HttpDelete]
   [SwaggerResponse(204)]
-  [SwaggerResponse(404, "Car whith id '1' does not exist")]
+  [SwaggerResponse(404, "Car with id '1' does not exist")]
   [Route("delete/{id}")]
   public async Task<IActionResult> DeleteCarById(string id)
   {
@@ -66,7 +66,7 @@ public class CarAPI : ControllerBase
 
     if (string.IsNullOrEmpty(car.CarName))
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Car whith id '{id}' does not exist"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Car with id '{id}' does not exist"));
     }
 
     car.Delete();
@@ -75,7 +75,7 @@ public class CarAPI : ControllerBase
   }
 
   /// <summary>
-  /// Get all cars.
+  /// GetAllCars get the list of all the cars <see cref="Car"/>
   /// </summary>
   /// <returns>List of all <see cref="Car"/>.</returns>
   [HttpGet]

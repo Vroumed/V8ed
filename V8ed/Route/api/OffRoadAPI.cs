@@ -28,8 +28,8 @@ public class OffRoadAPI : ControllerBase
   /// <param name="id">Id of the <see cref="OffRoadTracking"/></param>
   /// <returns></returns>
   [HttpGet]
-  [SwaggerResponse(200, "The collision", typeof(OffRoadTracking))]
-  [SwaggerResponse(404, "Collision whith id '1' does not exist")]
+  [SwaggerResponse(200, "Offroad", typeof(OffRoadTracking))]
+  [SwaggerResponse(404, "Offroad with id '1' does not exist")]
   [Route("get/{id}")]
   public async Task<IActionResult> GetOffRoadById(int id)
   {
@@ -39,16 +39,16 @@ public class OffRoadAPI : ControllerBase
     };
     _injector.Resolve(offRoad);
 
-    if (offRoad.Id == null)
+    if (offRoad == null)
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Offroad whith id '{id}' does not exist"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Offroad with id '{id}' does not exist"));
     }
 
     return Ok(offRoad);
   }
 
   /// <summary>
-  /// GetNumberOffRoadsByRun return a number of offroads from an <paramref name="id"/>
+  /// GetNumberOffRoadsByRun return a number of offroads from an Run id <paramref name="id"/>
   /// </summary>
   /// <param name="id">Id of the <see cref="Run"/></param>
   /// <returns></returns>
