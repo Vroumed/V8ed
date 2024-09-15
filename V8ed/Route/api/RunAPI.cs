@@ -22,9 +22,13 @@ public class RunAPI : ControllerBase
     DatabaseManager = injector.Retrieve<DatabaseManager>();
   }
 
+  /// <summary>
+  /// GetRunById get a run from an id
+  /// </summary>
+  /// <returns>Run.</returns>
   [HttpGet]
-  [SwaggerResponse(200, "The run", typeof(Run))]
-  [SwaggerResponse(404, "Run whith id '1' does not exist")]
+  [SwaggerResponse(200, "Run", typeof(Run))]
+  [SwaggerResponse(404, "Run with id '1' does not exist")]
   [Route("get/{id}")]
   public async Task<IActionResult> GetRunById(int id)
   {
@@ -36,15 +40,19 @@ public class RunAPI : ControllerBase
 
     if (run.EstimatedDistance == 0)
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run whith id '{id}' does not exist"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run with id '{id}' does not exist"));
     }
 
     return Ok(run);
   }
 
+  /// <summary>
+  /// GetVideoByRunId get the video of a run
+  /// </summary>
+  /// <returns>Video of the run.</returns>
   [HttpGet]
   [SwaggerResponse(200, "The video of the run", typeof(string))]
-  [SwaggerResponse(404, "Run whith id '1' does not exist")]
+  [SwaggerResponse(404, "Run with id '1' does not exist")]
   [Route("get/video/{id}")]
   public async Task<IActionResult> GetVideoByRunId(int id)
   {
@@ -56,15 +64,19 @@ public class RunAPI : ControllerBase
 
     if (string.IsNullOrEmpty(run.VideoUrl))
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run whith id '{id}' does not have a video"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run with id '{id}' does not have a video"));
     }
 
     return Ok(run.VideoUrl);
   }
 
+  /// <summary>
+  /// GetRunsByCarId get all the runs for a car
+  /// </summary>
+  /// <returns>List of all <see cref="Run"/>.</returns>
   [HttpGet]
-  [SwaggerResponse(200, "The run", typeof(Run))]
-  [SwaggerResponse(404, "Run whith id '1' does not exist")]
+  [SwaggerResponse(200, "Runs", typeof(Run))]
+  [SwaggerResponse(404, "Car with id '1' does not exist")]
   [Route("get/history/car/{id}")]
   public async Task<IActionResult> GetRunsByCarId(string id)
   {
@@ -102,7 +114,7 @@ public class RunAPI : ControllerBase
   }
 
   /// <summary>
-  /// Get all runs.
+  /// GetAllRuns get all the runs
   /// </summary>
   /// <returns>List of all <see cref="Run"/>.</returns>
   [HttpGet]
@@ -123,8 +135,9 @@ public class RunAPI : ControllerBase
   }
 
   /// <summary>
-  /// Get end run info.
+  /// GetEndRunInfo get all the information necessary for the end of the run display
   /// </summary>
+  /// <returns>All the information for the end of the run.</returns>
   [HttpGet]
   [SwaggerResponse(200, "Get end run info", typeof(IEnumerable<Run>))]
   [Route("get/run/{id}/end")]
@@ -141,12 +154,6 @@ public class RunAPI : ControllerBase
       HardwareID = run.Car.HardwareID,
     };
     _injector.Resolve(car);
-
-    EventBattery battery = new()
-    {
-      Run = run,
-    };
-    _injector.Resolve(battery);
 
     int numberCollision = new();
 
@@ -185,7 +192,6 @@ public class RunAPI : ControllerBase
     {
       Car = car,
       Run = run,
-      Battery = battery,
       Collisions = numberCollision,
       OffRoads = numberOffRoad
     };
