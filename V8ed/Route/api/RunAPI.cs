@@ -203,10 +203,6 @@ public class RunAPI : ControllerBase
     return Ok(result);
   }
 
-
-
-
-
   /// <summary>
   /// start a run
   /// </summary>
@@ -229,7 +225,6 @@ public class RunAPI : ControllerBase
 
     return Ok();
   }
-  
 
   /// <summary>
   /// end a run
@@ -245,24 +240,25 @@ public class RunAPI : ControllerBase
     if (!session.Logged)
       return Unauthorized(this.GetStatusError(HttpStatusCode.Unauthorized, "session", "You are not logged to a rover"));
 
-
     if (!session.RoverManager.StoreReadings)
       return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "already-started", "You are already running"));
 
     session.RoverManager.StoreReadings = false;
 
-    Run run = new Run();
-    run.Car = session.RoverManager.Car;
+    Run run = new()
+    {
+      Car = session.RoverManager.Car,
 
-    run.Collisions = session.RoverManager.Readings
+      Collisions = session.RoverManager.Readings
     .Where(s => s.reading.UltrasonicDistance < 10)
     .Select(s => new Collision
-      {
-        Time = s.time,
-    });
+    {
+      Time = s.time,
+    })
+    };
 
-    float averageDifference = (float)session.RoverManager.Readings
-    .Zip(session.RoverManager.Readings.Skip(1), 
+    float averageDifference = (float) session.RoverManager.Readings
+    .Zip(session.RoverManager.Readings.Skip(1),
       (dt1, dt2) => dt2.time - dt1.time)
     .Average(dt => dt.TotalMilliseconds);
 
@@ -273,6 +269,4 @@ public class RunAPI : ControllerBase
 
     return Ok();
   }
-
-
 }
