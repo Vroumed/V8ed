@@ -8,6 +8,8 @@ namespace Vroumed.V8ed.Managers;
 
 public class RoverManager
 {
+
+  public bool StoreReadings { get; set; }
   public enum ConnectionStatus
   {
     Ok,
@@ -118,8 +120,10 @@ public class RoverManager
 
     await Task.Run(() =>
     {
-      Readings.Add((DateTime.Now, reading));
       OnRoverReading?.Invoke(reading);
+
+      if (StoreReadings)
+        Readings.Add((DateTime.Now, reading));
     });
   }
 }

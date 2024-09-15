@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using Vroumed.V8ed.Dependencies;
 using Vroumed.V8ed.Extensions;
 using Vroumed.V8ed.Managers;
 using Vroumed.V8ed.Models;
+using Vroumed.V8ed.Models.Rover;
+using Vroumed.V8ed.Models.Users;
 
 namespace Vroumed.V8ed.Route.api;
 
@@ -22,9 +26,13 @@ public class RunAPI : ControllerBase
     DatabaseManager = injector.Retrieve<DatabaseManager>();
   }
 
+  /// <summary>
+  /// GetRunById get a run from an id
+  /// </summary>
+  /// <returns>Run.</returns>
   [HttpGet]
-  [SwaggerResponse(200, "The run", typeof(Run))]
-  [SwaggerResponse(404, "Run whith id '1' does not exist")]
+  [SwaggerResponse(200, "Run", typeof(Run))]
+  [SwaggerResponse(404, "Run with id '1' does not exist")]
   [Route("get/{id}")]
   public async Task<IActionResult> GetRunById(int id)
   {
@@ -36,15 +44,19 @@ public class RunAPI : ControllerBase
 
     if (run.EstimatedDistance == 0)
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run whith id '{id}' does not exist"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run with id '{id}' does not exist"));
     }
 
     return Ok(run);
   }
 
+  /// <summary>
+  /// GetVideoByRunId get the video of a run
+  /// </summary>
+  /// <returns>Video of the run.</returns>
   [HttpGet]
   [SwaggerResponse(200, "The video of the run", typeof(string))]
-  [SwaggerResponse(404, "Run whith id '1' does not exist")]
+  [SwaggerResponse(404, "Run with id '1' does not exist")]
   [Route("get/video/{id}")]
   public async Task<IActionResult> GetVideoByRunId(int id)
   {
@@ -56,15 +68,19 @@ public class RunAPI : ControllerBase
 
     if (string.IsNullOrEmpty(run.VideoUrl))
     {
-      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run whith id '{id}' does not have a video"));
+      return NotFound(this.GetStatusError(System.Net.HttpStatusCode.NotFound, nameof(id), $"Run with id '{id}' does not have a video"));
     }
 
     return Ok(run.VideoUrl);
   }
 
+  /// <summary>
+  /// GetRunsByCarId get all the runs for a car
+  /// </summary>
+  /// <returns>List of all <see cref="Run"/>.</returns>
   [HttpGet]
-  [SwaggerResponse(200, "The run", typeof(Run))]
-  [SwaggerResponse(404, "Run whith id '1' does not exist")]
+  [SwaggerResponse(200, "Runs", typeof(Run))]
+  [SwaggerResponse(404, "Car with id '1' does not exist")]
   [Route("get/history/car/{id}")]
   public async Task<IActionResult> GetRunsByCarId(string id)
   {
@@ -102,7 +118,7 @@ public class RunAPI : ControllerBase
   }
 
   /// <summary>
-  /// Get all runs.
+  /// GetAllRuns get all the runs
   /// </summary>
   /// <returns>List of all <see cref="Run"/>.</returns>
   [HttpGet]
@@ -123,8 +139,9 @@ public class RunAPI : ControllerBase
   }
 
   /// <summary>
-  /// Get end run info.
+  /// GetEndRunInfo get all the information necessary for the end of the run display
   /// </summary>
+  /// <returns>All the information for the end of the run.</returns>
   [HttpGet]
   [SwaggerResponse(200, "Get end run info", typeof(IEnumerable<Run>))]
   [Route("get/run/{id}/end")]
@@ -141,12 +158,6 @@ public class RunAPI : ControllerBase
       HardwareID = run.Car.HardwareID,
     };
     _injector.Resolve(car);
-
-    EventBattery battery = new()
-    {
-      Run = run,
-    };
-    _injector.Resolve(battery);
 
     int numberCollision = new();
 
@@ -185,11 +196,77 @@ public class RunAPI : ControllerBase
     {
       Car = car,
       Run = run,
-      Battery = battery,
       Collisions = numberCollision,
       OffRoads = numberOffRoad
     };
 
     return Ok(result);
+  }
+
+  /// <summary>
+  /// start a run
+  /// </summary>
+  [HttpPost]
+  [SwaggerResponse(200, "start run")]
+  [SwaggerResponse(403, "cannot start run")]
+  [SwaggerResponse(401, "cannot start run")]
+  [Route("get/run/start")]
+  public async Task<IActionResult> StartRun()
+  {
+    UserSession session = UserSession.FromContext(HttpContext);
+
+    if (!session.Logged)
+      return Unauthorized(this.GetStatusError(HttpStatusCode.Unauthorized, "session", "You are not logged to a rover"));
+
+    if (session.RoverManager.StoreReadings)
+      return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "already-started", "You are already running"));
+
+    session.RoverManager.StoreReadings = true;
+
+    return Ok();
+  }
+
+  /// <summary>
+  /// end a run
+  /// </summary>
+  [HttpPost]
+  [SwaggerResponse(200, "start run")]
+  [SwaggerResponse(400, "run not started")]
+  [Route("get/run/start")]
+  public async Task<IActionResult> EndRun()
+  {
+    UserSession session = UserSession.FromContext(HttpContext);
+
+    if (!session.Logged)
+      return Unauthorized(this.GetStatusError(HttpStatusCode.Unauthorized, "session", "You are not logged to a rover"));
+
+    if (!session.RoverManager.StoreReadings)
+      return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "already-started", "You are already running"));
+
+    session.RoverManager.StoreReadings = false;
+
+    Run run = new()
+    {
+      Car = session.RoverManager.Car,
+
+      Collisions = session.RoverManager.Readings
+    .Where(s => s.reading.UltrasonicDistance < 10)
+    .Select(s => new Collision
+    {
+      Time = s.time,
+    })
+    };
+
+    float averageDifference = (float) session.RoverManager.Readings
+    .Zip(session.RoverManager.Readings.Skip(1),
+      (dt1, dt2) => dt2.time - dt1.time)
+    .Average(dt => dt.TotalMilliseconds);
+
+    run.EstimatedDistance = session.RoverManager.Readings
+    .Sum(s => s.reading.Speed * (averageDifference / 50f));
+
+    await run.Insert();
+
+    return Ok();
   }
 }
