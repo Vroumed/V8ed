@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using Vroumed.V8ed.Dependencies;
 using Vroumed.V8ed.Extensions;
 using Vroumed.V8ed.Managers;
 using Vroumed.V8ed.Models;
+using Vroumed.V8ed.Models.Rover;
+using Vroumed.V8ed.Models.Users;
 
 namespace Vroumed.V8ed.Route.api;
 
@@ -192,4 +196,77 @@ public class RunAPI : ControllerBase
 
     return Ok(result);
   }
+
+
+
+
+
+  /// <summary>
+  /// start a run
+  /// </summary>
+  [HttpPost]
+  [SwaggerResponse(200, "start run")]
+  [SwaggerResponse(403, "cannot start run")]
+  [SwaggerResponse(401, "cannot start run")]
+  [Route("get/run/start")]
+  public async Task<IActionResult> StartRun()
+  {
+    UserSession session = UserSession.FromContext(HttpContext);
+
+    if (!session.Logged)
+      return Unauthorized(this.GetStatusError(HttpStatusCode.Unauthorized, "session", "You are not logged to a rover"));
+
+    if (session.RoverManager.StoreReadings)
+      return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "already-started", "You are already running"));
+
+    session.RoverManager.StoreReadings = true;
+
+    return Ok();
+  }
+  
+
+  /// <summary>
+  /// end a run
+  /// </summary>
+  [HttpPost]
+  [SwaggerResponse(200, "start run")]
+  [SwaggerResponse(400, "run not started")]
+  [Route("get/run/start")]
+  public async Task<IActionResult> EndRun()
+  {
+    UserSession session = UserSession.FromContext(HttpContext);
+
+    if (!session.Logged)
+      return Unauthorized(this.GetStatusError(HttpStatusCode.Unauthorized, "session", "You are not logged to a rover"));
+
+
+    if (!session.RoverManager.StoreReadings)
+      return BadRequest(this.GetStatusError(HttpStatusCode.BadRequest, "already-started", "You are already running"));
+
+    session.RoverManager.StoreReadings = false;
+
+    Run run = new Run();
+    run.Car = session.RoverManager.Car;
+
+    run.Collisions = session.RoverManager.Readings
+    .Where(s => s.reading.UltrasonicDistance < 10)
+    .Select(s => new Collision
+      {
+        Time = s.time,
+    });
+
+    float averageDifference = (float)session.RoverManager.Readings
+    .Zip(session.RoverManager.Readings.Skip(1), 
+      (dt1, dt2) => dt2.time - dt1.time)
+    .Average(dt => dt.TotalMilliseconds);
+
+    run.EstimatedDistance = session.RoverManager.Readings
+    .Sum(s => s.reading.Speed * (averageDifference / 50f));
+
+    await run.Insert();
+
+    return Ok();
+  }
+
+
 }
