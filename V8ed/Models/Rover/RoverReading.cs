@@ -20,16 +20,16 @@ public class RoverReading
   public int TrackRight { get; set; }
 
   [JsonProperty("ultrasonic_distance")]
-  public int UltrasonicDistance { get; set; } // On suppose que c'est une distance
+  public float UltrasonicDistance { get; set; } 
 
   [JsonProperty("speed")]
-  public int Speed { get; set; }
+  public float Speed { get; set; }
 
   [JsonProperty("direction")]
-  public int Direction { get; set; }
+  public float Direction { get; set; }
 
   [JsonProperty("headX")]
-  public int HeadX { get; set; }
+  public double HeadX { get; set; }
 
   [JsonProperty("thrust")]
   public int Thrust { get; set; }

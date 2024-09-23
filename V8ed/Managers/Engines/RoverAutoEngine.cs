@@ -15,12 +15,130 @@ public class RoverAutoEngine
     MiddleTrack = 1,
     RightTrack  = 2,
   }
-  private LastTriggeredTracker _lastTriggeredTracker;
+  private LastTriggeredTracker _lastTriggeredTracker = LastTriggeredTracker.MiddleTrack;
 
-  private Dictionary<int, int> SonarMap { get; } = new();
+  private Dictionary<int, double> SonarMap { get; } = new();
   public required RoverManager RoverManager { get; init; }
-  public void Perform(RoverReading roverReading) { 
-    //Main
+  private bool _skipscan = false;
+  private bool _avoidance = false;
+  public async void Perform(RoverReading roverReading) 
+  {
+
+
+    bool reverse = true;
+
+    if (reverse)
+    {
+      roverReading.TrackLeft = roverReading.TrackLeft == 1 ? 0 : 1;
+      roverReading.TrackMiddle = roverReading.TrackMiddle == 1 ? 0 : 1;
+      roverReading.TrackRight = roverReading.TrackRight == 1 ? 0 : 1;
+    }
+
+
+    await SonarScan(roverReading);
+
+    if (!_avoidance)
+      await LineReading(roverReading);
+  }
+
+  private async Task SonarScan(RoverReading roverReading)
+  {
+    int bef = SonarMap.Count;
+    // 45 , 68 , 90 , 113 , 135
+    switch (SonarMap.Count)
+    {
+      case 0:
+        await AimAtAsync(68);
+        break;
+      case 1:
+        await AimAtAsync(113);
+        break;
+    }
+
+
+    SonarMap[(int)Math.Floor(roverReading.HeadX)] = roverReading.UltrasonicDistance;
+
+    if (SonarMap.Count == bef)
+    {
+      //Something went wrong, reset
+      SonarMap.Clear();
+      _avoidance = false;
+    }
+  
+
+
+    if (SonarMap.Count >= 2 && !_avoidance)
+    {
+      await EvaluateSonar();
+      SonarMap.Clear();
+    }
+  }
+
+  private async Task LineReading(RoverReading roverReading)
+  {
+    switch (roverReading)
+    {
+      case { TrackMiddle:1, TrackLeft: 0, TrackRight: 0 }:
+        await GoAheadAsync();
+        _lastTriggeredTracker = LastTriggeredTracker.MiddleTrack;
+        break;
+      case { TrackMiddle:0, TrackLeft: 1, TrackRight: 0 }:
+        await SlightLeftAsync();
+        _lastTriggeredTracker = LastTriggeredTracker.LeftTrack;
+        break;
+      case { TrackMiddle:0, TrackLeft: 0, TrackRight: 1 }:
+        await SlightRightAsync();
+        _lastTriggeredTracker = LastTriggeredTracker.RightTrack;
+        break;
+
+      case { TrackMiddle:0, TrackLeft: 0, TrackRight: 0 }:
+        switch (_lastTriggeredTracker)
+        {
+          case LastTriggeredTracker.LeftTrack:
+            await FullLeftAsync();
+            break;
+          case LastTriggeredTracker.MiddleTrack:
+            await GoAheadAsync();
+            break;
+          case LastTriggeredTracker.RightTrack:
+            await FullRightAsync();
+            break;
+          default:
+            throw new ArgumentOutOfRangeException();
+        }
+
+        break;
+
+    }
+  }
+
+  private async Task EvaluateSonar()
+  {
+    KeyValuePair<int, double> min = SonarMap.MinBy(s => s.Value);
+    if (min.Value < 30)
+      switch (min.Key)
+      {
+        case >= 90:
+          await FullRightAsync();
+          _avoidance = true;
+          Task.Run(async () =>
+          {
+            await Task.Delay(1500);
+            _lastTriggeredTracker = LastTriggeredTracker.LeftTrack;
+            _avoidance = false;
+          });
+          break;
+        case < 90:
+          await FullRightAsync();
+          _avoidance = true;
+          Task.Run(async () =>
+          {
+            await Task.Delay(1500);
+            _lastTriggeredTracker = LastTriggeredTracker.RightTrack;
+            _avoidance = false;
+          });
+          break;
+      }
   }
 
   private async Task SendCommandAsync(Command command)
@@ -33,6 +151,10 @@ public class RoverAutoEngine
 
   private readonly struct Command
   {
+    public Command()
+    {
+    }
+
     [JsonProperty("cmd")]
     public required int CommandType { get; init; }
 
@@ -55,7 +177,7 @@ public class RoverAutoEngine
       Data = new Dictionary<string, object>
                 {
                     { "direction", 0 },
-                    { "speed", Speed },
+                    { "speed", 0.3f },
                     { "thrust", 1 }
                 }
     };
@@ -70,8 +192,8 @@ public class RoverAutoEngine
       CommandType = 1,
       Data = new Dictionary<string, object>
                 {
-                    { "direction", 0.5 },
-                    { "speed", Speed },
+                    { "direction", -0.5 },
+                    { "speed", 0.5f },
                     { "thrust", 1 }
                 }
     };
@@ -86,8 +208,8 @@ public class RoverAutoEngine
       CommandType = 1,
       Data = new Dictionary<string, object>
                 {
-                    { "direction", 1 },
-                    { "speed", Speed },
+                    { "direction", -1 },
+                    { "speed", 0.7f },
                     { "thrust", 1 }
                 }
     };
@@ -102,8 +224,8 @@ public class RoverAutoEngine
       CommandType = 1,
       Data = new Dictionary<string, object>
                 {
-                    { "direction", -0.5 },
-                    { "speed", Speed },
+                    { "direction", 0.5 },
+                    { "speed", 0.5f },
                     { "thrust", 100 }
                 }
     };
@@ -118,8 +240,8 @@ public class RoverAutoEngine
       CommandType = 1,
       Data = new Dictionary<string, object>
                 {
-                    { "direction", -1 },
-                    { "speed", Speed },
+                    { "direction", 1 },
+                    { "speed", 0.7f },
                     { "thrust", 100 }
                 }
     };
@@ -145,7 +267,7 @@ public class RoverAutoEngine
       Data = new Dictionary<string, object>
                 {
                     { "headX", normalizedAngle },
-                    { "headY", 0 }
+                    { "headY", -0.2f }
                 }
     };
 

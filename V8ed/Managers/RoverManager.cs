@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
 using System.Net.WebSockets;
 using System.Text;
+using Vroumed.V8ed.Controllers;
+using Vroumed.V8ed.Managers.Engines;
 using Vroumed.V8ed.Models;
 using Vroumed.V8ed.Models.Rover;
+using Vroumed.V8ed.Utils;
 
 namespace Vroumed.V8ed.Managers;
 
@@ -35,14 +38,16 @@ public class RoverManager
 
   public Car Car { get; set; } = null!;
   public Connection Connection { get; set; } = null!;
+  public RoverAutoEngine? AutoEngine { get; set; }
 
-  public List<(DateTime time, RoverReading reading)> Readings { get; set; }
+  public List<(DateTime time, RoverReading reading)> Readings { get; set; } = new();
 
   #endregion
 
   public ClientWebSocket WebSocket { get; } = new();
   private Task WebsocketEventLoop { get; set; } = null!;
   private CancellationTokenSource CancellationTokenSource { get; set; } = null!;
+
 
   public bool Connected { get; private set; }
 
@@ -111,6 +116,29 @@ public class RoverManager
 
   private async Task HandlePacket(string receivedMessage)
   {
+    if (receivedMessage.StartsWith("auto:"))
+    {
+
+      bool auto = receivedMessage.Split(':').Last().ToBool();
+
+      if (!auto)
+      {
+        OnRoverReading -= AutoEngine!.Perform;
+        AutoEngine = null;
+      }
+      else
+      {
+        AutoEngine = new RoverAutoEngine()
+        {
+          RoverManager = this
+        };
+
+        OnRoverReading += AutoEngine!.Perform;
+      }
+
+      return;
+    }
+    Console.WriteLine(receivedMessage);
     RoverReading? reading = JsonConvert.DeserializeObject<RoverReading>(receivedMessage);
 
     if (reading == null)

@@ -12,7 +12,6 @@ public class UserSession
   public IPAddress? RoverIP { get; set; }
   public DateTime LastActivity { get; set; } = DateTime.UtcNow;
   public RoverManager RoverManager { get; } = new();
-  public RoverAutoEngine? AutoEngine { get; set; }
 
   public UserSession(string sessionId, IPAddress? clientIp)
   {
